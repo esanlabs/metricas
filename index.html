@@ -3,70 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard de Métricas</title>
-  <!-- Framework CSS Tailwind (CDN sin instalación de Node/Builds) -->
+  <title>Dashboard de Métricas & KPIs</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
 
   <!-- ENCABEZADO -->
-  <header class="max-w-7xl mx-auto mb-8 flex justify-between items-center border-b border-slate-700 pb-4">
+  <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
     <div>
-      <h1 class="text-3xl font-bold text-indigo-400">Dashboard de Métricas AV</h1>
-      <p class="text-sm text-slate-400">Consumo de datos en tiempo real desde Google Sheets</p>
+      <h1 class="text-3xl font-extrabold text-indigo-400">Dashboard de Métricas AV</h1>
+      <p class="text-xs md:text-sm text-slate-400">Análisis comparativo de Requerimientos y Servicios (2025 - 2026)</p>
     </div>
     <div id="status-badge" class="px-3 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-      Cargando datos...
+      Cargando API...
     </div>
   </header>
 
-  <!-- CONTENEDOR PRINCIPAL -->
-  <main class="max-w-7xl mx-auto space-y-8">
-    
-    <!-- TARJETAS DE KPIS PRINCIPALES -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <span class="text-sm text-slate-400 font-medium">Total Servicios</span>
-        <h2 id="kpi-servicios" class="text-4xl font-extrabold text-indigo-400 mt-2">--</h2>
+  <main class="max-w-7xl mx-auto space-y-6">
+
+    <!-- MÓDULO DE FILTROS COMBINABLES -->
+    <section class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-xl backdrop-blur-sm">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-sm uppercase font-bold tracking-wider text-slate-300 flex items-center gap-2">
+          <span>🔍</span> Módulo de Filtros Dinámicos
+        </h2>
+        <button id="btn-reset-filters" class="text-xs text-indigo-400 hover:text-indigo-300 underline font-medium">
+          Limpiar Filtros
+        </button>
       </div>
-      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <span class="text-sm text-slate-400 font-medium">Total Requerimientos</span>
-        <h2 id="kpi-requerimientos" class="text-4xl font-extrabold text-emerald-400 mt-2">--</h2>
-      </div>
-      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <span class="text-sm text-slate-400 font-medium">Terceros Registrados</span>
-        <h2 id="kpi-terceros" class="text-4xl font-extrabold text-amber-400 mt-2">--</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1 font-medium">Año de Análisis</label>
+          <select id="filter-anio" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:ring-2 focus:ring-indigo-500">
+            <option value="TODOS">Todos (2025 vs 2026)</option>
+            <option value="2025">Año 2025</option>
+            <option value="2026">Año 2026</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1 font-medium">Estado del Ticket</label>
+          <select id="filter-estado" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:ring-2 focus:ring-indigo-500">
+            <option value="TODOS">Todos los Estados</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1 font-medium">Área Solicitante</label>
+          <select id="filter-area" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:ring-2 focus:ring-indigo-500">
+            <option value="TODOS">Todas las Áreas</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1 font-medium">Tipo de Servicio</label>
+          <select id="filter-servicio" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:ring-2 focus:ring-indigo-500">
+            <option value="TODOS">Todos los Servicios</option>
+          </select>
+        </div>
       </div>
     </section>
 
-    <!-- TABLA DE DETALLE (DATOS DE MUESTRA) -->
-    <section class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
-      <div class="p-6 border-b border-slate-700">
-        <h3 class="text-lg font-semibold text-slate-200">Catálogo de Servicios</h3>
+    <!-- CARDS DE KPIS RESUMEN -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase">Total Tickets (REQ)</span>
+        <h3 id="kpi-req-total" class="text-3xl font-bold text-emerald-400 mt-1">--</h3>
+        <p class="text-[10px] text-slate-500 mt-1">*Excluye registros sin fecha de creación</p>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-700/50 text-slate-200 uppercase text-xs">
-            <tr>
-              <th class="px-6 py-3">Macro Servicio</th>
-              <th class="px-6 py-3">Nombre Servicio</th>
-              <th class="px-6 py-3">Costo Servicio</th>
-              <th class="px-6 py-3">Personas</th>
-              <th class="px-6 py-3">Factor Medición</th>
-            </tr>
-          </thead>
-          <tbody id="table-datos-body" class="divide-y divide-slate-700">
-            <tr>
-              <td colspan="5" class="px-6 py-4 text-center text-slate-500">Cargando información...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase">Total Servicios (SER)</span>
+        <h3 id="kpi-ser-total" class="text-3xl font-bold text-indigo-400 mt-1">--</h3>
+        <p class="text-[10px] text-slate-500 mt-1">*Excluye registros sin fecha de cobertura</p>
       </div>
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase">Prom. Tickets / Mes</span>
+        <h3 id="kpi-req-prom" class="text-3xl font-bold text-amber-400 mt-1">--</h3>
+        <p class="text-[10px] text-slate-500 mt-1">Basado en meses activos</p>
+      </div>
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase">Prom. Servicios / Mes</span>
+        <h3 id="kpi-ser-prom" class="text-3xl font-bold text-cyan-400 mt-1">--</h3>
+        <p class="text-[10px] text-slate-500 mt-1">Basado en meses activos</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE GRÁFICOS INTERACTIVOS CON REDIMENSIÓN TEMPORAL -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- GRÁFICO 1: REQUERIMIENTOS -->
+      <div id="container-chart-req" class="chart-card bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg transition-all duration-300 flex flex-col">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-bold text-slate-200">Requerimientos (REQ) por Mes</h3>
+          <button onclick="toggleChartExpand('container-chart-req')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded-md text-slate-300">
+            🔍 Expandir / Redimensionar
+          </button>
+        </div>
+        <div class="relative flex-grow min-h-[280px]">
+          <canvas id="chartReq"></canvas>
+        </div>
+      </div>
+
+      <!-- GRÁFICO 2: SERVICIOS -->
+      <div id="container-chart-ser" class="chart-card bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg transition-all duration-300 flex flex-col">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-bold text-slate-200">Servicios (SER) por Mes</h3>
+          <button onclick="toggleChartExpand('container-chart-ser')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded-md text-slate-300">
+            🔍 Expandir / Redimensionar
+          </button>
+        </div>
+        <div class="relative flex-grow min-h-[280px]">
+          <canvas id="chartSer"></canvas>
+        </div>
+      </div>
+
+      <!-- GRÁFICO 3: COMPARATIVO REQ 2025 vs 2026 -->
+      <div id="container-chart-comp-req" class="chart-card bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg transition-all duration-300 flex flex-col lg:col-span-1">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-bold text-slate-200">Comparativo Requerimientos (2025 vs 2026)</h3>
+          <button onclick="toggleChartExpand('container-chart-comp-req')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded-md text-slate-300">
+            🔍 Expandir / Redimensionar
+          </button>
+        </div>
+        <div class="relative flex-grow min-h-[280px]">
+          <canvas id="chartCompReq"></canvas>
+        </div>
+      </div>
+
+      <!-- GRÁFICO 4: COMPARATIVO SER 2025 vs 2026 -->
+      <div id="container-chart-comp-ser" class="chart-card bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg transition-all duration-300 flex flex-col lg:col-span-1">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-bold text-slate-200">Comparativo Servicios (2025 vs 2026)</h3>
+          <button onclick="toggleChartExpand('container-chart-comp-ser')" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded-md text-slate-300">
+            🔍 Expandir / Redimensionar
+          </button>
+        </div>
+        <div class="relative flex-grow min-h-[280px]">
+          <canvas id="chartCompSer"></canvas>
+        </div>
+      </div>
+
     </section>
 
   </main>
 
-  <!-- LÓGICA DE CONSUMO DE API -->
   <script src="assets/js/app.js"></script>
 </body>
 </html>
