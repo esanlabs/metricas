@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Métricas</title>
+  <!-- Framework CSS Tailwind (CDN sin instalación de Node/Builds) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
 
+  <!-- ENCABEZADO -->
+  <header class="max-w-7xl mx-auto mb-8 flex justify-between items-center border-b border-slate-700 pb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-indigo-400">Dashboard de Métricas AV</h1>
+      <p class="text-sm text-slate-400">Consumo de datos en tiempo real desde Google Sheets</p>
+    </div>
+    <div id="status-badge" class="px-3 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+      Cargando datos...
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- TARJETAS DE KPIS PRINCIPALES -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+        <span class="text-sm text-slate-400 font-medium">Total Servicios</span>
+        <h2 id="kpi-servicios" class="text-4xl font-extrabold text-indigo-400 mt-2">--</h2>
+      </div>
+      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+        <span class="text-sm text-slate-400 font-medium">Total Requerimientos</span>
+        <h2 id="kpi-requerimientos" class="text-4xl font-extrabold text-emerald-400 mt-2">--</h2>
+      </div>
+      <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+        <span class="text-sm text-slate-400 font-medium">Terceros Registrados</span>
+        <h2 id="kpi-terceros" class="text-4xl font-extrabold text-amber-400 mt-2">--</h2>
+      </div>
+    </section>
+
+    <!-- TABLA DE DETALLE (DATOS DE MUESTRA) -->
+    <section class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
+      <div class="p-6 border-b border-slate-700">
+        <h3 class="text-lg font-semibold text-slate-200">Catálogo de Servicios</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-700/50 text-slate-200 uppercase text-xs">
+            <tr>
+              <th class="px-6 py-3">Macro Servicio</th>
+              <th class="px-6 py-3">Nombre Servicio</th>
+              <th class="px-6 py-3">Costo Servicio</th>
+              <th class="px-6 py-3">Personas</th>
+              <th class="px-6 py-3">Factor Medición</th>
+            </tr>
+          </thead>
+          <tbody id="table-datos-body" class="divide-y divide-slate-700">
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-slate-500">Cargando información...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- LÓGICA DE CONSUMO DE API -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
