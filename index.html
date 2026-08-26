@@ -42,7 +42,10 @@
       </p>
     </div>
     <div class="flex items-center gap-3">
-      <span id="status-badge" class="px-3 py-1 text-xs rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+      <button onclick="toggleLogModal()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5">
+        📋 Registro de Errores
+      </button>
+      <span id="status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
         Conectando...
       </span>
     </div>
@@ -93,7 +96,7 @@
   </section>
 
   <!-- TARJETAS DE KPIS PRINCIPALES -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4">
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tickets (REQ)</p>
       <h3 id="kpi-req-total" class="text-3xl font-extrabold text-emerald-400 mt-2">0</h3>
@@ -116,6 +119,23 @@
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prom. Servicios / Mes</p>
       <h3 id="kpi-ser-prom" class="text-3xl font-extrabold text-cyan-400 mt-2">0</h3>
       <p class="text-[11px] text-slate-500 mt-1">Basado en meses activos</p>
+    </div>
+  </section>
+
+  <!-- PANEL DE AUDITORÍA DE CALIDAD DE DATOS (REGISTROS EXCLUIDOS POR DATOS FALTANTES) -->
+  <section class="bg-rose-950/20 border border-rose-900/40 rounded-xl p-4 mb-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-rose-400 font-bold text-sm">⚠️ Auditoría de Calidad de Datos:</span>
+        <span class="text-xs text-slate-300">Registros excluidos por campos nulos/incompletos según regla de negocio:</span>
+      </div>
+      <span id="audit-total-excluded" class="text-xs font-bold bg-rose-900/60 text-rose-200 px-2.5 py-1 rounded-full border border-rose-700/50">0 Excluidos</span>
+    </div>
+    <div id="audit-details" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs text-slate-400 border-t border-rose-900/30 pt-2">
+      <div>REQ 2025: <span id="audit-req2025" class="text-slate-200 font-medium">0</span></div>
+      <div>REQ 2026: <span id="audit-req2026" class="text-slate-200 font-medium">0</span></div>
+      <div>SER 2025: <span id="audit-ser2025" class="text-slate-200 font-medium">0</span></div>
+      <div>SER 2026: <span id="audit-ser2026" class="text-slate-200 font-medium">0</span></div>
     </div>
   </section>
 
@@ -166,6 +186,29 @@
       </div>
     </div>
   </section>
+
+  <!-- MODAL PARA DIAGNÓSTICO DE ERRORES DE CONEXIÓN -->
+  <div id="log-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+          🛠️ Visor de Logs y Registro de Conexión
+        </h3>
+        <button onclick="toggleLogModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+      <div class="p-4 flex-1 overflow-y-auto font-mono text-xs bg-black/50 text-emerald-400 space-y-2" id="log-console">
+        <div>[SISTEMA] Inicializando módulo de monitoreo...</div>
+      </div>
+      <div class="p-3 bg-slate-800 border-t border-slate-700 flex justify-between items-center">
+        <button onclick="clearConsoleLog()" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors">
+          Limpiar Log
+        </button>
+        <button onclick="fetchDashboardData()" class="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded transition-colors">
+          Reintentar Conexión
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- CONTROLADOR PRINCIPAL -->
   <script src="assets/js/app.js"></script>
