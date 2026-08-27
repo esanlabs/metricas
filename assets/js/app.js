@@ -1,19 +1,19 @@
 /**
  * ============================================================================
- * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV Y KPI DE COSTO ACUMULADO
+ * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV
  * ============================================================================
  */
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
 let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [] };
-let serviceCostMap = {}; // Mapa para rápida asociación de costos y macroservicios
+let serviceCostMap = {};
 let chartInstances = {};
 let connectionLogs = [];
 
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
 
-// Registrar plugin datalabels de Chart.js
+// Registrar plugin datalabels
 Chart.register(ChartDataLabels);
 
 // PALETA ACCESIBLE (COLORBLIND-SAFE)
@@ -104,11 +104,21 @@ function buildServiceCostMap() {
   if (rawData.datos && Array.isArray(rawData.datos)) {
     rawData.datos.forEach(row => {
       if (row.nomServicio) {
-        const name = row.nomServicio.toString().trim().toLowerCase();
-        const costRaw = parseFloat(row.costoServicio);
-        const cost = isNaN(costRaw) ? 0 : costRaw;
-        const macro = row.MacroServicio || 'OTRO';
-        serviceCostMap[name] = { costo: cost, macroServicio: macro };
+        const nameKey = row.nomServicio.toString().trim().toLowerCase();
+        const rawCostStr = row.costoServicio !== undefined ? row.costoServicio.toString().trim() : '0';
+        
+        let parsedCost = 0;
+        if (rawCostStr !== '-' && rawCostStr !== '') {
+          const num = parseFloat(rawCostStr.replace(',', '.'));
+          parsedCost = isNaN(num) ? 0 : num;
+        }
+
+        const macroGroup = row.MacroServicio ? row.MacroServicio.toString().trim() : 'OTRO';
+        
+        serviceCostMap[nameKey] = { 
+          costo: parsedCost, 
+          macroServicio: macroGroup 
+        };
       }
     });
   }
@@ -128,7 +138,8 @@ function populateFilterSelects() {
   });
 
   allSer.forEach(item => {
-    if (item.Servicio) servicios.add(item.Servicio);
+    const sName = item.Servicio || item.nomServicio;
+    if (sName) servicios.add(sName);
     if (item.areaSolicitante) areas.add(item.areaSolicitante);
   });
 
@@ -172,8 +183,9 @@ function isValidRecord(item, isService = false) {
   const dCreate = new Date(item.fCreacion);
   if (isNaN(dCreate.getTime())) return false;
 
-  if (isService && (!item.Servicio || item.Servicio.toString().trim() === '')) {
-    return false;
+  if (isService) {
+    const sName = item.Servicio || item.nomServicio;
+    if (!sName || sName.toString().trim() === '') return false;
   }
 
   return true;
@@ -197,7 +209,11 @@ function processAndRenderDashboard() {
       }
       if (fEstado !== 'TODOS' && item.estadoTicket !== fEstado) return false;
       if (fArea !== 'TODOS' && item.areaSolicitante !== fArea) return false;
-      if (checkServicio && fServicio !== 'TODOS' && item.Servicio !== fServicio) return false;
+      
+      if (checkServicio && fServicio !== 'TODOS') {
+        const sName = item.Servicio || item.nomServicio;
+        if (sName !== fServicio) return false;
+      }
       return true;
     });
   };
@@ -227,8 +243,7 @@ function processAndRenderDashboard() {
   const serTime2025 = getMonthlyAvgVidaTicketSER(cleanSer2025);
   const serTime2026 = getMonthlyAvgVidaTicketSER(cleanSer2026);
 
-  // Cálculo del Costo Acumulado por Mes (Servicios)
-  const allCleanSer = [...cleanSer2025, ...cleanSer2026];
+  // Cálculo del Costo Acumulado
   const { monthlyCosts2025, monthlyCosts2026, grandTotalCost } = calculateMonthlyServiceCosts(cleanSer2025, cleanSer2026);
 
   // KPIs
@@ -270,15 +285,19 @@ function calculateMonthlyServiceCosts(ser2025, ser2026) {
 
   const processList = (items, targetArray) => {
     items.forEach(item => {
-      const d = new Date(item.fCreacion);
-      if (!isNaN(d.getTime()) && item.Servicio) {
-        const sName = item.Servicio.toString().trim().toLowerCase();
-        const info = serviceCostMap[sName];
-        const unitCost = info ? info.costo : 0;
-        const month = d.getMonth();
+      const rawServiceName = item.Servicio || item.nomServicio;
+      if (item.fCreacion && rawServiceName) {
+        const d = new Date(item.fCreacion);
+        if (!isNaN(d.getTime())) {
+          const nameKey = rawServiceName.toString().trim().toLowerCase();
+          const info = serviceCostMap[nameKey];
+          
+          const unitCost = info ? info.costo : 0;
+          const monthIndex = d.getMonth();
 
-        targetArray[month] += unitCost;
-        grandTotalCost += unitCost;
+          targetArray[monthIndex] += unitCost;
+          grandTotalCost += unitCost;
+        }
       }
     });
   };

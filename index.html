@@ -123,7 +123,7 @@
 
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Costo Total Ejecutado</p>
-      <h3 id="kpi-costo-total" class="text-2xl font-extrabold text-teal-400 mt-1">S/ 0</h3>
+      <h3 id="kpi-costo-total" class="text-2xl font-extrabold text-teal-400 mt-1">S/ 0.00</h3>
       <p class="text-[10px] text-slate-500 mt-1">Suma acumulada de servicios</p>
     </div>
   </section>
@@ -169,14 +169,14 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 2: COSTO ACUMULADO POR MES DE SERVICIOS EJECUTADOS (NUEVO KPI GRÁFICO) -->
+  <!-- SECCIÓN 2: COSTO ACUMULADO POR MES (NUEVO KPI GRÁFICO) -->
   <section class="mb-8">
-    <h2 class="text-lg font-bold text-slate-200 border-l-4 border-emerald-500 pl-3 mb-4">
+    <h2 class="text-lg font-bold text-slate-200 border-l-4 border-teal-500 pl-3 mb-4">
       Costo Acumulado Mensual de Servicios Ejecutados (en Soles S/)
     </h2>
     <div id="card-chart-cost" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[400px]">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-slate-300">Costo Acumulado Mensual (Soles S/) por Tipo de Servicio</h3>
+        <h3 class="text-sm font-semibold text-slate-300">Costo Mensual Acumulado (Soles S/) por Servicios Ejecutados</h3>
         <button onclick="toggleChartExpand('card-chart-cost')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
       </div>
       <div class="h-[320px]"><canvas id="chartCost"></canvas></div>
