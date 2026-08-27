@@ -96,33 +96,39 @@
   </section>
 
   <!-- TARJETAS DE KPIS PRINCIPALES -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4">
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 shadow-lg">
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tickets (REQ)</p>
-      <h3 id="kpi-req-total" class="text-3xl font-extrabold text-emerald-400 mt-2">0</h3>
-      <p class="text-[11px] text-slate-500 mt-1">*Excluye registros sin fecha de creación</p>
+      <h3 id="kpi-req-total" class="text-2xl font-extrabold text-emerald-400 mt-1">0</h3>
+      <p class="text-[10px] text-slate-500 mt-1">*Excluye datos faltantes</p>
     </div>
 
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 shadow-lg">
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Servicios (SER)</p>
-      <h3 id="kpi-ser-total" class="text-3xl font-extrabold text-indigo-400 mt-2">0</h3>
-      <p class="text-[11px] text-slate-500 mt-1">*Excluye registros sin fecha de creación</p>
+      <h3 id="kpi-ser-total" class="text-2xl font-extrabold text-indigo-400 mt-1">0</h3>
+      <p class="text-[10px] text-slate-500 mt-1">*Excluye datos faltantes</p>
     </div>
 
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 shadow-lg">
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prom. Tickets / Mes</p>
-      <h3 id="kpi-req-prom" class="text-3xl font-extrabold text-amber-400 mt-2">0</h3>
-      <p class="text-[11px] text-slate-500 mt-1">Basado en meses activos</p>
+      <h3 id="kpi-req-prom" class="text-2xl font-extrabold text-amber-400 mt-1">0</h3>
+      <p class="text-[10px] text-slate-500 mt-1">Meses activos</p>
     </div>
 
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 shadow-lg">
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prom. Servicios / Mes</p>
-      <h3 id="kpi-ser-prom" class="text-3xl font-extrabold text-cyan-400 mt-2">0</h3>
-      <p class="text-[11px] text-slate-500 mt-1">Basado en meses activos</p>
+      <h3 id="kpi-ser-prom" class="text-2xl font-extrabold text-cyan-400 mt-1">0</h3>
+      <p class="text-[10px] text-slate-500 mt-1">Meses activos</p>
+    </div>
+
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Costo Total Ejecutado</p>
+      <h3 id="kpi-costo-total" class="text-2xl font-extrabold text-teal-400 mt-1">S/ 0</h3>
+      <p class="text-[10px] text-slate-500 mt-1">Suma acumulada de servicios</p>
     </div>
   </section>
 
-  <!-- PANEL DE AUDITORÍA DE CALIDAD DE DATOS (REGISTROS EXCLUIDOS POR DATOS FALTANTES) -->
+  <!-- PANEL DE AUDITORÍA DE CALIDAD DE DATOS -->
   <section class="bg-rose-950/20 border border-rose-900/40 rounded-xl p-4 mb-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -163,7 +169,21 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 2: TIEMPOS DE ATENCIÓN (VIDA TICKET) -->
+  <!-- SECCIÓN 2: COSTO ACUMULADO POR MES DE SERVICIOS EJECUTADOS (NUEVO KPI GRÁFICO) -->
+  <section class="mb-8">
+    <h2 class="text-lg font-bold text-slate-200 border-l-4 border-emerald-500 pl-3 mb-4">
+      Costo Acumulado Mensual de Servicios Ejecutados (en Soles S/)
+    </h2>
+    <div id="card-chart-cost" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[400px]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-slate-300">Costo Acumulado Mensual (Soles S/) por Tipo de Servicio</h3>
+        <button onclick="toggleChartExpand('card-chart-cost')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+      </div>
+      <div class="h-[320px]"><canvas id="chartCost"></canvas></div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 3: TIEMPOS DE ATENCIÓN (VIDA TICKET) -->
   <section class="mb-8">
     <h2 class="text-lg font-bold text-slate-200 border-l-4 border-amber-500 pl-3 mb-4">
       Tiempo Promedio de Atención (Vida del Ticket - Días)
