@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV
+ * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV CON MULTISELECCIÓN
  * ============================================================================
  */
 
@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   logMessage('INFO', 'Aplicación cargada. Iniciando petición a Google Apps Script...');
   fetchDashboardData();
   setupFilterListeners();
+  setupDropdownDismiss();
 });
 
 function logMessage(type, message, detail = null) {
@@ -54,6 +55,29 @@ function clearConsoleLog() {
 function toggleLogModal() {
   const modal = document.getElementById('log-modal');
   modal.classList.toggle('hidden');
+}
+
+/**
+ * Control del Desplegable Multi-Selección
+ */
+function toggleDropdown(id) {
+  const target = document.getElementById(id);
+  const isHidden = target.classList.contains('hidden');
+  
+  // Cerrar todos los demás
+  document.querySelectorAll('.dropdown-container div[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
+
+  if (isHidden) {
+    target.classList.remove('hidden');
+  }
+}
+
+function setupDropdownDismiss() {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown-container')) {
+      document.querySelectorAll('.dropdown-container div[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
+    }
+  });
 }
 
 async function fetchDashboardData() {
@@ -83,7 +107,7 @@ async function fetchDashboardData() {
       
       rawData = result.data;
       buildServiceCostMap();
-      populateFilterSelects();
+      populateFilterOptions();
       processAndRenderDashboard();
     } else {
       throw new Error(result.message || 'Respuesta con error del backend en Google Apps Script');
@@ -96,9 +120,6 @@ async function fetchDashboardData() {
   }
 }
 
-/**
- * Mapeo de la tabla de referencia 'DATOS' (costoServicio y MacroServicio por nomServicio)
- */
 function buildServiceCostMap() {
   serviceCostMap = {};
   if (rawData.datos && Array.isArray(rawData.datos)) {
@@ -124,7 +145,7 @@ function buildServiceCostMap() {
   }
 }
 
-function populateFilterSelects() {
+function populateFilterOptions() {
   const estados = new Set();
   const areas = new Set();
   const servicios = new Set();
@@ -143,34 +164,73 @@ function populateFilterSelects() {
     if (item.areaSolicitante) areas.add(item.areaSolicitante);
   });
 
-  fillSelect('filter-estado', Array.from(estados).sort());
-  fillSelect('filter-area', Array.from(areas).sort());
-  fillSelect('filter-servicio', Array.from(servicios).sort());
+  fillCheckboxDropdown('dropdown-estado', 'filter-estado-cb', Array.from(estados).sort());
+  fillCheckboxDropdown('dropdown-area', 'filter-area-cb', Array.from(areas).sort());
+  fillCheckboxDropdown('dropdown-servicio', 'filter-servicio-cb', Array.from(servicios).sort());
 }
 
-function fillSelect(elementId, options) {
-  const select = document.getElementById(elementId);
-  select.innerHTML = select.children[0].outerHTML;
+function fillCheckboxDropdown(containerId, className, options) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
   options.forEach(opt => {
-    const el = document.createElement('option');
-    el.value = opt;
-    el.textContent = opt;
-    select.appendChild(el);
+    const label = document.createElement('label');
+    label.className = 'flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs';
+    label.innerHTML = `
+      <input type="checkbox" value="${opt}" class="${className} rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+      <span class="truncate">${opt}</span>
+    `;
+    container.appendChild(label);
   });
 }
 
 function setupFilterListeners() {
-  ['filter-anio', 'filter-estado', 'filter-area', 'filter-servicio'].forEach(id => {
-    document.getElementById(id).addEventListener('change', processAndRenderDashboard);
+  // Evento delegado para inputs de checkboxes
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('.filter-anio-cb, .filter-estado-cb, .filter-area-cb, .filter-servicio-cb')) {
+      updateFilterLabels();
+      processAndRenderDashboard();
+    }
   });
 
   document.getElementById('btn-reset-filters').addEventListener('click', () => {
-    document.getElementById('filter-anio').value = 'TODOS';
-    document.getElementById('filter-estado').value = 'TODOS';
-    document.getElementById('filter-area').value = 'TODOS';
-    document.getElementById('filter-servicio').value = 'TODOS';
+    document.querySelectorAll('.filter-anio-cb, .filter-estado-cb, .filter-area-cb, .filter-servicio-cb').forEach(cb => {
+      cb.checked = true;
+    });
+    updateFilterLabels();
     processAndRenderDashboard();
   });
+}
+
+function getSelectedValues(className) {
+  return Array.from(document.querySelectorAll(`.${className}:checked`)).map(cb => cb.value);
+}
+
+function updateFilterLabels() {
+  const updateLabel = (className, labelId, defaultText) => {
+    const all = document.querySelectorAll(`.${className}`);
+    const selected = document.querySelectorAll(`.${className}:checked`);
+    const labelElem = document.getElementById(labelId);
+
+    if (selected.length === 0) {
+      labelElem.textContent = 'Ninguno';
+      labelElem.classList.add('text-rose-400');
+    } else if (selected.length === all.length) {
+      labelElem.textContent = defaultText;
+      labelElem.classList.remove('text-rose-400');
+    } else if (selected.length === 1) {
+      labelElem.textContent = selected[0].value;
+      labelElem.classList.remove('text-rose-400');
+    } else {
+      labelElem.textContent = `${selected.length} seleccionados`;
+      labelElem.classList.remove('text-rose-400');
+    }
+  };
+
+  updateLabel('filter-anio-cb', 'label-filter-anio', 'Todos seleccionados');
+  updateLabel('filter-estado-cb', 'label-filter-estado', 'Todos seleccionados');
+  updateLabel('filter-area-cb', 'label-filter-area', 'Todas seleccionadas');
+  updateLabel('filter-servicio-cb', 'label-filter-servicio', 'Todos seleccionados');
 }
 
 /**
@@ -192,28 +252,35 @@ function isValidRecord(item, isService = false) {
 }
 
 function processAndRenderDashboard() {
-  const fAnio = document.getElementById('filter-anio').value;
-  const fEstado = document.getElementById('filter-estado').value;
-  const fArea = document.getElementById('filter-area').value;
-  const fServicio = document.getElementById('filter-servicio').value;
+  const selAnios = getSelectedValues('filter-anio-cb');
+  const selEstados = getSelectedValues('filter-estado-cb');
+  const selAreas = getSelectedValues('filter-area-cb');
+  const selServicios = getSelectedValues('filter-servicio-cb');
 
   let exReq2025 = 0, exReq2026 = 0, exSer2025 = 0, exSer2026 = 0;
 
   const filterList = (list, yearStr, checkServicio = false, onExcluded) => {
-    if (fAnio !== 'TODOS' && fAnio !== yearStr) return [];
+    if (!selAnios.includes(yearStr)) return [];
+    
     return list.filter(item => {
       const valid = isValidRecord(item, checkServicio);
       if (!valid) {
         onExcluded();
         return false;
       }
-      if (fEstado !== 'TODOS' && item.estadoTicket !== fEstado) return false;
-      if (fArea !== 'TODOS' && item.areaSolicitante !== fArea) return false;
-      
-      if (checkServicio && fServicio !== 'TODOS') {
-        const sName = item.Servicio || item.nomServicio;
-        if (sName !== fServicio) return false;
+
+      if (selEstados.length > 0 && item.estadoTicket && !selEstados.includes(item.estadoTicket)) {
+        return false;
       }
+      if (selAreas.length > 0 && item.areaSolicitante && !selAreas.includes(item.areaSolicitante)) {
+        return false;
+      }
+      
+      if (checkServicio && selServicios.length > 0) {
+        const sName = item.Servicio || item.nomServicio;
+        if (sName && !selServicios.includes(sName)) return false;
+      }
+
       return true;
     });
   };
@@ -243,7 +310,7 @@ function processAndRenderDashboard() {
   const serTime2025 = getMonthlyAvgVidaTicketSER(cleanSer2025);
   const serTime2026 = getMonthlyAvgVidaTicketSER(cleanSer2026);
 
-  // Cálculo del Costo Acumulado
+  // Costos acumulados
   const { monthlyCosts2025, monthlyCosts2026, grandTotalCost } = calculateMonthlyServiceCosts(cleanSer2025, cleanSer2026);
 
   // KPIs
@@ -263,7 +330,7 @@ function processAndRenderDashboard() {
     ser2025: serMonthly2025, ser2026: serMonthly2026,
     reqTime2025, reqTime2026, serTime2025, serTime2026,
     monthlyCosts2025, monthlyCosts2026,
-    fAnio
+    selAnios
   });
 }
 
@@ -350,8 +417,11 @@ function getMonthlyAvgVidaTicketSER(items) {
   return sums.map((sum, i) => (counts[i] > 0 ? parseFloat((sum / counts[i]).toFixed(1)) : 0));
 }
 
-function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime2026, serTime2025, serTime2026, monthlyCosts2025, monthlyCosts2026, fAnio }) {
+function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime2026, serTime2025, serTime2026, monthlyCosts2025, monthlyCosts2026, selAnios }) {
   Object.values(chartInstances).forEach(chart => chart.destroy());
+
+  const show2025 = selAnios.includes('2025');
+  const show2026 = selAnios.includes('2026');
 
   // 1. REQ por Mes
   chartInstances.req = new Chart(document.getElementById('chartReq'), {
@@ -359,8 +429,8 @@ function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        ...(fAnio === 'TODOS' || fAnio === '2025' ? [{ label: 'REQ 2025', data: req2025, backgroundColor: COLORS.blue2025 }] : []),
-        ...(fAnio === 'TODOS' || fAnio === '2026' ? [{ label: 'REQ 2026', data: req2026, backgroundColor: COLORS.orange2026 }] : [])
+        ...(show2025 ? [{ label: 'REQ 2025', data: req2025, backgroundColor: COLORS.blue2025 }] : []),
+        ...(show2026 ? [{ label: 'REQ 2026', data: req2026, backgroundColor: COLORS.orange2026 }] : [])
       ]
     },
     options: getChartCommonOptions()
@@ -372,21 +442,21 @@ function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        ...(fAnio === 'TODOS' || fAnio === '2025' ? [{ label: 'SER 2025', data: ser2025, backgroundColor: COLORS.teal2025 }] : []),
-        ...(fAnio === 'TODOS' || fAnio === '2026' ? [{ label: 'SER 2026', data: ser2026, backgroundColor: COLORS.purple2026 }] : [])
+        ...(show2025 ? [{ label: 'SER 2025', data: ser2025, backgroundColor: COLORS.teal2025 }] : []),
+        ...(show2026 ? [{ label: 'SER 2026', data: ser2026, backgroundColor: COLORS.purple2026 }] : [])
       ]
     },
     options: getChartCommonOptions()
   });
 
-  // 3. NUEVO KPI: Costo Acumulado Mensual (Soles S/)
+  // 3. Costo Acumulado
   chartInstances.cost = new Chart(document.getElementById('chartCost'), {
     type: 'bar',
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        ...(fAnio === 'TODOS' || fAnio === '2025' ? [{ label: 'Costo 2025 (S/)', data: monthlyCosts2025, backgroundColor: COLORS.teal2025 }] : []),
-        ...(fAnio === 'TODOS' || fAnio === '2026' ? [{ label: 'Costo 2026 (S/)', data: monthlyCosts2026, backgroundColor: COLORS.purple2026 }] : [])
+        ...(show2025 ? [{ label: 'Costo 2025 (S/)', data: monthlyCosts2025, backgroundColor: COLORS.teal2025 }] : []),
+        ...(show2026 ? [{ label: 'Costo 2026 (S/)', data: monthlyCosts2026, backgroundColor: COLORS.purple2026 }] : [])
       ]
     },
     options: {
@@ -412,8 +482,8 @@ function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        ...(fAnio === 'TODOS' || fAnio === '2025' ? [{ label: 'Días Prom. 2025', data: reqTime2025, borderColor: COLORS.blue2025, backgroundColor: COLORS.blue2025, tension: 0.2 }] : []),
-        ...(fAnio === 'TODOS' || fAnio === '2026' ? [{ label: 'Días Prom. 2026', data: reqTime2026, borderColor: COLORS.orange2026, backgroundColor: COLORS.orange2026, tension: 0.2 }] : [])
+        ...(show2025 ? [{ label: 'Días Prom. 2025', data: reqTime2025, borderColor: COLORS.blue2025, backgroundColor: COLORS.blue2025, tension: 0.2 }] : []),
+        ...(show2026 ? [{ label: 'Días Prom. 2026', data: reqTime2026, borderColor: COLORS.orange2026, backgroundColor: COLORS.orange2026, tension: 0.2 }] : [])
       ]
     },
     options: getChartCommonOptions(' d')
@@ -425,8 +495,8 @@ function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime
     data: {
       labels: MONTH_NAMES,
       datasets: [
-        ...(fAnio === 'TODOS' || fAnio === '2025' ? [{ label: 'Días Prom. 2025', data: serTime2025, borderColor: COLORS.teal2025, backgroundColor: COLORS.teal2025, tension: 0.2 }] : []),
-        ...(fAnio === 'TODOS' || fAnio === '2026' ? [{ label: 'Días Prom. 2026', data: serTime2026, borderColor: COLORS.purple2026, backgroundColor: COLORS.purple2026, tension: 0.2 }] : [])
+        ...(show2025 ? [{ label: 'Días Prom. 2025', data: serTime2025, borderColor: COLORS.teal2025, backgroundColor: COLORS.teal2025, tension: 0.2 }] : []),
+        ...(show2026 ? [{ label: 'Días Prom. 2026', data: serTime2026, borderColor: COLORS.purple2026, backgroundColor: COLORS.purple2026, tension: 0.2 }] : [])
       ]
     },
     options: getChartCommonOptions(' d')

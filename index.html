@@ -51,11 +51,11 @@
     </div>
   </header>
 
-  <!-- MÓDULO DE FILTROS DINÁMICOS -->
-  <section class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 mb-8 shadow-xl backdrop-blur-md">
+  <!-- MÓDULO DE FILTROS DINÁMICOS MULTI-SELECCIÓN -->
+  <section class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 mb-8 shadow-xl backdrop-blur-md relative z-20">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-        🔍 Módulo de Filtros Dinámicos
+        🔍 Módulo de Filtros Multiselección
       </h2>
       <button id="btn-reset-filters" class="text-xs text-indigo-400 hover:text-indigo-300 underline transition-colors">
         Limpiar Filtros
@@ -63,34 +63,59 @@
     </div>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div>
+      <!-- Filtro 1: Año -->
+      <div class="relative dropdown-container" id="container-filter-anio">
         <label class="block text-xs font-medium text-slate-400 mb-1">Año de Análisis</label>
-        <select id="filter-anio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-          <option value="TODOS">Todos (2025 vs 2026)</option>
-          <option value="2025">Solo 2025</option>
-          <option value="2026">Solo 2026</option>
-        </select>
+        <button type="button" onclick="toggleDropdown('dropdown-anio')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
+          <span id="label-filter-anio" class="truncate">Todos seleccionados</span>
+          <span class="text-xs text-slate-400">▼</span>
+        </button>
+        <div id="dropdown-anio" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
+          <label class="flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs">
+            <input type="checkbox" value="2025" class="filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+            <span>2025</span>
+          </label>
+          <label class="flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs">
+            <input type="checkbox" value="2026" class="filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+            <span>2026</span>
+          </label>
+        </div>
       </div>
 
-      <div>
+      <!-- Filtro 2: Estado del Ticket -->
+      <div class="relative dropdown-container" id="container-filter-estado">
         <label class="block text-xs font-medium text-slate-400 mb-1">Estado del Ticket</label>
-        <select id="filter-estado" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-          <option value="TODOS">Todos los Estados</option>
-        </select>
+        <button type="button" onclick="toggleDropdown('dropdown-estado')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
+          <span id="label-filter-estado" class="truncate">Todos seleccionados</span>
+          <span class="text-xs text-slate-400">▼</span>
+        </button>
+        <div id="dropdown-estado" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
+          <!-- Opciones dinámicas -->
+        </div>
       </div>
 
-      <div>
+      <!-- Filtro 3: Área Solicitante -->
+      <div class="relative dropdown-container" id="container-filter-area">
         <label class="block text-xs font-medium text-slate-400 mb-1">Área Solicitante</label>
-        <select id="filter-area" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-          <option value="TODOS">Todas las Áreas</option>
-        </select>
+        <button type="button" onclick="toggleDropdown('dropdown-area')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
+          <span id="label-filter-area" class="truncate">Todas seleccionadas</span>
+          <span class="text-xs text-slate-400">▼</span>
+        </button>
+        <div id="dropdown-area" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
+          <!-- Opciones dinámicas -->
+        </div>
       </div>
 
-      <div>
+      <!-- Filtro 4: Tipo de Servicio -->
+      <div class="relative dropdown-container" id="container-filter-servicio">
         <label class="block text-xs font-medium text-slate-400 mb-1">Tipo de Servicio</label>
-        <select id="filter-servicio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-          <option value="TODOS">Todos los Servicios</option>
-        </select>
+        <button type="button" onclick="toggleDropdown('dropdown-servicio')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
+          <span id="label-filter-servicio" class="truncate">Todos seleccionados</span>
+          <span class="text-xs text-slate-400">▼</span>
+        </button>
+        <div id="dropdown-servicio" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
+          <!-- Opciones dinámicas -->
+        </div>
       </div>
     </div>
   </section>
@@ -169,7 +194,7 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 2: COSTO ACUMULADO POR MES (NUEVO KPI GRÁFICO) -->
+  <!-- SECCIÓN 2: COSTO ACUMULADO POR MES -->
   <section class="mb-8">
     <h2 class="text-lg font-bold text-slate-200 border-l-4 border-teal-500 pl-3 mb-4">
       Costo Acumulado Mensual de Servicios Ejecutados (en Soles S/)
