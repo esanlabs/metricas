@@ -1,12 +1,14 @@
 /**
  * ============================================================================
- * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV CON FILTROS TIPO GOOGLE SHEETS
+ * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV CON REGISTROS DETALLADOS
  * ============================================================================
  */
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
 let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [] };
+let filteredDataGlobal = { req: [], ser: [] };
+let modalCurrentRecords = [];
 let serviceCostMap = {};
 let chartInstances = {};
 let connectionLogs = [];
@@ -64,7 +66,6 @@ function toggleDropdown(id) {
   const target = document.getElementById(id);
   const isHidden = target.classList.contains('hidden');
   
-  // Cerrar otros desplegables abiertos
   document.querySelectorAll('.dropdown-container div[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
 
   if (isHidden) {
@@ -82,9 +83,6 @@ function setupDropdownDismiss() {
   });
 }
 
-/**
- * Filtrar las opciones visibles según la búsqueda
- */
 function filterDropdownOptions(dropdownId, searchText) {
   const dropdown = document.getElementById(dropdownId);
   const items = dropdown.querySelectorAll('.options-list .option-item');
@@ -100,9 +98,6 @@ function filterDropdownOptions(dropdownId, searchText) {
   });
 }
 
-/**
- * Botones: Seleccionar Todo / Borrar (Solo afecta las opciones visibles en la búsqueda)
- */
 function selectAllInDropdown(dropdownId, checkStatus) {
   const dropdown = document.getElementById(dropdownId);
   const visibleItems = dropdown.querySelectorAll('.options-list .option-item:not(.hidden) input[type="checkbox"]');
@@ -221,7 +216,6 @@ function fillCheckboxDropdown(dropdownId, className, options) {
 }
 
 function setupFilterListeners() {
-  // Cambio en los checkboxes
   document.addEventListener('change', (e) => {
     if (e.target.matches('.filter-cb')) {
       updateFilterLabels();
@@ -229,7 +223,6 @@ function setupFilterListeners() {
     }
   });
 
-  // Limpiar todos los filtros a su estado por defecto
   document.getElementById('btn-reset-filters').addEventListener('click', () => {
     document.querySelectorAll('.filter-cb').forEach(cb => { cb.checked = true; });
     document.querySelectorAll('.dropdown-container input[type="text"]').forEach(input => {
@@ -328,6 +321,10 @@ function processAndRenderDashboard() {
   const cleanReq2026 = filterList(rawData.req2026, '2026', false, () => exReq2026++);
   const cleanSer2025 = filterList(rawData.ser2025, '2025', true, () => exSer2025++);
   const cleanSer2026 = filterList(rawData.ser2026, '2026', true, () => exSer2026++);
+
+  // Guardar datos filtrados a nivel global para el Modal
+  filteredDataGlobal.req = [...cleanReq2025, ...cleanReq2026];
+  filteredDataGlobal.ser = [...cleanSer2025, ...cleanSer2026];
 
   // Auditoría
   document.getElementById('audit-req2025').textContent = exReq2025;
@@ -454,6 +451,97 @@ function getMonthlyAvgVidaTicketSER(items) {
   });
 
   return sums.map((sum, i) => (counts[i] > 0 ? parseFloat((sum / counts[i]).toFixed(1)) : 0));
+}
+
+/**
+ * LÓGICA DEL MODAL DE REGISTROS
+ */
+function openRecordsModal(type) {
+  const modal = document.getElementById('records-modal');
+  const title = document.getElementById('records-modal-title');
+  const subtitle = document.getElementById('records-modal-subtitle');
+  const searchInput = document.getElementById('records-search-input');
+  
+  searchInput.value = '';
+  
+  if (type === 'req') {
+    title.innerHTML = '📋 Registros de Requerimientos (REQ)';
+    subtitle.textContent = 'Lista detallada de requerimientos que alimentan el gráfico según los filtros aplicados.';
+    modalCurrentRecords = filteredDataGlobal.req;
+  } else {
+    title.innerHTML = '📋 Registros de Servicios (SER)';
+    subtitle.textContent = 'Lista detallada de servicios que alimentan las métricas y costos según los filtros aplicados.';
+    modalCurrentRecords = filteredDataGlobal.ser;
+  }
+
+  renderModalTable(modalCurrentRecords);
+  modal.classList.remove('hidden');
+}
+
+function closeRecordsModal() {
+  document.getElementById('records-modal').classList.add('hidden');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function renderModalTable(records) {
+  const tbody = document.getElementById('records-table-body');
+  const countBadge = document.getElementById('records-count-badge');
+  tbody.innerHTML = '';
+
+  countBadge.textContent = `${records.length} Registros`;
+
+  if (records.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="py-8 text-center text-slate-500 italic">
+          No se encontraron registros activos para este criterio.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  records.forEach(item => {
+    const ticket = item.ticket || item.codTicket || item.id || '-';
+    const servicio = item.Servicio || item.nomServicio || item.solicitud || item.resumen || '-';
+    const fecha = formatDate(item.fCreacion);
+    const solicitante = item.solicitante || item.areaSolicitante || item.usuario || '-';
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-800/60 transition-colors';
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono text-indigo-400 font-semibold">${ticket}</td>
+      <td class="py-2.5 px-3 font-medium">${servicio}</td>
+      <td class="py-2.5 px-3 text-slate-400">${fecha}</td>
+      <td class="py-2.5 px-3 text-slate-300">${solicitante}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterModalTable(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) {
+    renderModalTable(modalCurrentRecords);
+    return;
+  }
+
+  const filtered = modalCurrentRecords.filter(item => {
+    const ticket = (item.ticket || item.codTicket || item.id || '').toString().toLowerCase();
+    const servicio = (item.Servicio || item.nomServicio || item.solicitud || item.resumen || '').toString().toLowerCase();
+    const fecha = formatDate(item.fCreacion).toLowerCase();
+    const solicitante = (item.solicitante || item.areaSolicitante || item.usuario || '').toString().toLowerCase();
+
+    return ticket.includes(q) || servicio.includes(q) || fecha.includes(q) || solicitante.includes(q);
+  });
+
+  renderModalTable(filtered);
 }
 
 function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime2026, serTime2025, serTime2026, monthlyCosts2025, monthlyCosts2026, selAnios }) {

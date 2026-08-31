@@ -73,16 +73,13 @@
         </button>
         
         <div id="dropdown-anio" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
-          <!-- Buscador -->
           <input type="text" placeholder="Buscar..." oninput="filterDropdownOptions('dropdown-anio', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
           
-          <!-- Botones de Acción Estilo Google Sheets -->
           <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
             <button type="button" onclick="selectAllInDropdown('dropdown-anio', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
             <button type="button" onclick="selectAllInDropdown('dropdown-anio', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
           
-          <!-- Opciones -->
           <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
             <label class="option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs">
               <input type="checkbox" value="2025" class="filter-cb filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
@@ -112,9 +109,7 @@
             <button type="button" onclick="selectAllInDropdown('dropdown-estado', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
           
-          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
-            <!-- Opciones Dinámicas -->
-          </div>
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
 
@@ -134,9 +129,7 @@
             <button type="button" onclick="selectAllInDropdown('dropdown-area', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
           
-          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
-            <!-- Opciones Dinámicas -->
-          </div>
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
 
@@ -156,9 +149,7 @@
             <button type="button" onclick="selectAllInDropdown('dropdown-servicio', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
           
-          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
-            <!-- Opciones Dinámicas -->
-          </div>
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
 
@@ -224,7 +215,12 @@
       <div id="card-chart-req" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Requerimientos (REQ) por Mes</h3>
-          <button onclick="toggleChartExpand('card-chart-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          <div class="flex items-center gap-2">
+            <button onclick="openRecordsModal('req')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
+              📄 Registros
+            </button>
+            <button onclick="toggleChartExpand('card-chart-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          </div>
         </div>
         <div class="h-[300px]"><canvas id="chartReq"></canvas></div>
       </div>
@@ -232,7 +228,12 @@
       <div id="card-chart-ser" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Servicios (SER) por Mes</h3>
-          <button onclick="toggleChartExpand('card-chart-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          <div class="flex items-center gap-2">
+            <button onclick="openRecordsModal('ser')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
+              📄 Registros
+            </button>
+            <button onclick="toggleChartExpand('card-chart-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          </div>
         </div>
         <div class="h-[300px]"><canvas id="chartSer"></canvas></div>
       </div>
@@ -247,7 +248,12 @@
     <div id="card-chart-cost" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[400px]">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-semibold text-slate-300">Costo Mensual Acumulado (Soles S/) por Servicios Ejecutados</h3>
-        <button onclick="toggleChartExpand('card-chart-cost')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+        <div class="flex items-center gap-2">
+          <button onclick="openRecordsModal('ser')" class="text-xs text-teal-300 hover:text-white bg-teal-950/80 hover:bg-teal-900 border border-teal-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
+            📄 Registros
+          </button>
+          <button onclick="toggleChartExpand('card-chart-cost')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+        </div>
       </div>
       <div class="h-[320px]"><canvas id="chartCost"></canvas></div>
     </div>
@@ -262,7 +268,12 @@
       <div id="card-chart-time-req" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Tiempo Promedio de Atención - REQ (Días)</h3>
-          <button onclick="toggleChartExpand('card-chart-time-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          <div class="flex items-center gap-2">
+            <button onclick="openRecordsModal('req')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
+              📄 Registros
+            </button>
+            <button onclick="toggleChartExpand('card-chart-time-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          </div>
         </div>
         <div class="h-[300px]"><canvas id="chartTimeReq"></canvas></div>
       </div>
@@ -270,12 +281,65 @@
       <div id="card-chart-time-ser" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Tiempo Promedio de Atención - SER (Días)</h3>
-          <button onclick="toggleChartExpand('card-chart-time-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          <div class="flex items-center gap-2">
+            <button onclick="openRecordsModal('ser')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
+              📄 Registros
+            </button>
+            <button onclick="toggleChartExpand('card-chart-time-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
+          </div>
         </div>
         <div class="h-[300px]"><canvas id="chartTimeSer"></canvas></div>
       </div>
     </div>
   </section>
+
+  <!-- MODAL DE VISUALIZACIÓN DE REGISTROS DETALLADOS -->
+  <div id="records-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <!-- Header -->
+      <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+        <div>
+          <h3 id="records-modal-title" class="font-bold text-slate-100 flex items-center gap-2">
+            📋 Registros Filtrados
+          </h3>
+          <p id="records-modal-subtitle" class="text-xs text-slate-400 mt-0.5">Mostrando registros activos bajo los filtros seleccionados</p>
+        </div>
+        <button onclick="closeRecordsModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-2">&times;</button>
+      </div>
+      
+      <!-- Buscador interno en tabla -->
+      <div class="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-4">
+        <input type="text" id="records-search-input" oninput="filterModalTable(this.value)" placeholder="🔍 Buscar por ticket, servicio, fecha o solicitante..." class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+        <span id="records-count-badge" class="text-xs font-semibold bg-indigo-950 text-indigo-300 px-3 py-1 rounded-full border border-indigo-800">
+          0 Registros
+        </span>
+      </div>
+
+      <!-- Tabla de Registros -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-700 text-slate-400 uppercase tracking-wider text-[11px] bg-slate-800/50 sticky top-0 backdrop-blur-md">
+              <th class="py-2.5 px-3">Ticket</th>
+              <th class="py-2.5 px-3">Servicio / Solicitud</th>
+              <th class="py-2.5 px-3">Fecha</th>
+              <th class="py-2.5 px-3">Solicitante</th>
+            </tr>
+          </thead>
+          <tbody id="records-table-body" class="divide-y divide-slate-800 text-slate-300">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-3 bg-slate-800 border-t border-slate-700 flex justify-end">
+        <button onclick="closeRecordsModal()" class="px-4 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-lg transition-colors">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL PARA DIAGNÓSTICO DE ERRORES DE CONEXIÓN -->
   <div id="log-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
