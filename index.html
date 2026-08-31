@@ -51,34 +51,48 @@
     </div>
   </header>
 
-  <!-- MÓDULO DE FILTROS DINÁMICOS MULTI-SELECCIÓN -->
+  <!-- MÓDULO DE FILTROS DINÁMICOS ESTILO GOOGLE SHEETS -->
   <section class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 mb-8 shadow-xl backdrop-blur-md relative z-20">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-        🔍 Módulo de Filtros Multiselección
+        🔍 Módulo de Filtros con Buscador
       </h2>
       <button id="btn-reset-filters" class="text-xs text-indigo-400 hover:text-indigo-300 underline transition-colors">
-        Limpiar Filtros
+        Limpiar Todos los Filtros
       </button>
     </div>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Filtro 1: Año -->
+      
+      <!-- Filtro 1: Año de Análisis -->
       <div class="relative dropdown-container" id="container-filter-anio">
         <label class="block text-xs font-medium text-slate-400 mb-1">Año de Análisis</label>
         <button type="button" onclick="toggleDropdown('dropdown-anio')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
           <span id="label-filter-anio" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        <div id="dropdown-anio" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
-          <label class="flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs">
-            <input type="checkbox" value="2025" class="filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
-            <span>2025</span>
-          </label>
-          <label class="flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs">
-            <input type="checkbox" value="2026" class="filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
-            <span>2026</span>
-          </label>
+        
+        <div id="dropdown-anio" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
+          <!-- Buscador -->
+          <input type="text" placeholder="Buscar..." oninput="filterDropdownOptions('dropdown-anio', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+          
+          <!-- Botones de Acción Estilo Google Sheets -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
+            <button type="button" onclick="selectAllInDropdown('dropdown-anio', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
+            <button type="button" onclick="selectAllInDropdown('dropdown-anio', false)" class="text-rose-400 hover:underline">Borrar</button>
+          </div>
+          
+          <!-- Opciones -->
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
+            <label class="option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs">
+              <input type="checkbox" value="2025" class="filter-cb filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+              <span class="truncate">2025</span>
+            </label>
+            <label class="option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs">
+              <input type="checkbox" value="2026" class="filter-cb filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+              <span class="truncate">2026</span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -89,8 +103,18 @@
           <span id="label-filter-estado" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        <div id="dropdown-estado" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
-          <!-- Opciones dinámicas -->
+        
+        <div id="dropdown-estado" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
+          <input type="text" placeholder="Buscar estado..." oninput="filterDropdownOptions('dropdown-estado', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+          
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
+            <button type="button" onclick="selectAllInDropdown('dropdown-estado', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
+            <button type="button" onclick="selectAllInDropdown('dropdown-estado', false)" class="text-rose-400 hover:underline">Borrar</button>
+          </div>
+          
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
+            <!-- Opciones Dinámicas -->
+          </div>
         </div>
       </div>
 
@@ -101,8 +125,18 @@
           <span id="label-filter-area" class="truncate">Todas seleccionadas</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        <div id="dropdown-area" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
-          <!-- Opciones dinámicas -->
+        
+        <div id="dropdown-area" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
+          <input type="text" placeholder="Buscar área..." oninput="filterDropdownOptions('dropdown-area', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+          
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
+            <button type="button" onclick="selectAllInDropdown('dropdown-area', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
+            <button type="button" onclick="selectAllInDropdown('dropdown-area', false)" class="text-rose-400 hover:underline">Borrar</button>
+          </div>
+          
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
+            <!-- Opciones Dinámicas -->
+          </div>
         </div>
       </div>
 
@@ -113,10 +147,21 @@
           <span id="label-filter-servicio" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        <div id="dropdown-servicio" class="hidden absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 z-30 space-y-1">
-          <!-- Opciones dinámicas -->
+        
+        <div id="dropdown-servicio" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
+          <input type="text" placeholder="Buscar servicio..." oninput="filterDropdownOptions('dropdown-servicio', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+          
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
+            <button type="button" onclick="selectAllInDropdown('dropdown-servicio', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
+            <button type="button" onclick="selectAllInDropdown('dropdown-servicio', false)" class="text-rose-400 hover:underline">Borrar</button>
+          </div>
+          
+          <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
+            <!-- Opciones Dinámicas -->
+          </div>
         </div>
       </div>
+
     </div>
   </section>
 

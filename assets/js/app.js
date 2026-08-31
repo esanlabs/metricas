@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV CON MULTISELECCIÓN
+ * CONTROLADOR FRONTEND - DASHBOARD DE MÉTRICAS AV CON FILTROS TIPO GOOGLE SHEETS
  * ============================================================================
  */
 
@@ -58,17 +58,19 @@ function toggleLogModal() {
 }
 
 /**
- * Control del Desplegable Multi-Selección
+ * LÓGICA DE INTERFAZ ESTILO GOOGLE SHEETS
  */
 function toggleDropdown(id) {
   const target = document.getElementById(id);
   const isHidden = target.classList.contains('hidden');
   
-  // Cerrar todos los demás
+  // Cerrar otros desplegables abiertos
   document.querySelectorAll('.dropdown-container div[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
 
   if (isHidden) {
     target.classList.remove('hidden');
+    const input = target.querySelector('input[type="text"]');
+    if (input) input.focus();
   }
 }
 
@@ -78,6 +80,39 @@ function setupDropdownDismiss() {
       document.querySelectorAll('.dropdown-container div[id^="dropdown-"]').forEach(el => el.classList.add('hidden'));
     }
   });
+}
+
+/**
+ * Filtrar las opciones visibles según la búsqueda
+ */
+function filterDropdownOptions(dropdownId, searchText) {
+  const dropdown = document.getElementById(dropdownId);
+  const items = dropdown.querySelectorAll('.options-list .option-item');
+  const query = searchText.toLowerCase().trim();
+
+  items.forEach(item => {
+    const labelText = item.querySelector('span').textContent.toLowerCase();
+    if (labelText.includes(query)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
+
+/**
+ * Botones: Seleccionar Todo / Borrar (Solo afecta las opciones visibles en la búsqueda)
+ */
+function selectAllInDropdown(dropdownId, checkStatus) {
+  const dropdown = document.getElementById(dropdownId);
+  const visibleItems = dropdown.querySelectorAll('.options-list .option-item:not(.hidden) input[type="checkbox"]');
+
+  visibleItems.forEach(cb => {
+    cb.checked = checkStatus;
+  });
+
+  updateFilterLabels();
+  processAndRenderDashboard();
 }
 
 async function fetchDashboardData() {
@@ -169,33 +204,37 @@ function populateFilterOptions() {
   fillCheckboxDropdown('dropdown-servicio', 'filter-servicio-cb', Array.from(servicios).sort());
 }
 
-function fillCheckboxDropdown(containerId, className, options) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
+function fillCheckboxDropdown(dropdownId, className, options) {
+  const dropdown = document.getElementById(dropdownId);
+  const optionsList = dropdown.querySelector('.options-list');
+  optionsList.innerHTML = '';
 
   options.forEach(opt => {
     const label = document.createElement('label');
-    label.className = 'flex items-center gap-2 p-1.5 hover:bg-slate-700/50 rounded cursor-pointer text-xs';
+    label.className = 'option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs';
     label.innerHTML = `
-      <input type="checkbox" value="${opt}" class="${className} rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+      <input type="checkbox" value="${opt}" class="filter-cb ${className} rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
       <span class="truncate">${opt}</span>
     `;
-    container.appendChild(label);
+    optionsList.appendChild(label);
   });
 }
 
 function setupFilterListeners() {
-  // Evento delegado para inputs de checkboxes
+  // Cambio en los checkboxes
   document.addEventListener('change', (e) => {
-    if (e.target.matches('.filter-anio-cb, .filter-estado-cb, .filter-area-cb, .filter-servicio-cb')) {
+    if (e.target.matches('.filter-cb')) {
       updateFilterLabels();
       processAndRenderDashboard();
     }
   });
 
+  // Limpiar todos los filtros a su estado por defecto
   document.getElementById('btn-reset-filters').addEventListener('click', () => {
-    document.querySelectorAll('.filter-anio-cb, .filter-estado-cb, .filter-area-cb, .filter-servicio-cb').forEach(cb => {
-      cb.checked = true;
+    document.querySelectorAll('.filter-cb').forEach(cb => { cb.checked = true; });
+    document.querySelectorAll('.dropdown-container input[type="text"]').forEach(input => {
+      input.value = '';
+      filterDropdownOptions(input.closest('div[id^="dropdown-"]').id, '');
     });
     updateFilterLabels();
     processAndRenderDashboard();
@@ -214,16 +253,16 @@ function updateFilterLabels() {
 
     if (selected.length === 0) {
       labelElem.textContent = 'Ninguno';
-      labelElem.classList.add('text-rose-400');
+      labelElem.className = 'truncate text-rose-400 font-semibold';
     } else if (selected.length === all.length) {
       labelElem.textContent = defaultText;
-      labelElem.classList.remove('text-rose-400');
+      labelElem.className = 'truncate text-slate-200';
     } else if (selected.length === 1) {
       labelElem.textContent = selected[0].value;
-      labelElem.classList.remove('text-rose-400');
+      labelElem.className = 'truncate text-indigo-300';
     } else {
       labelElem.textContent = `${selected.length} seleccionados`;
-      labelElem.classList.remove('text-rose-400');
+      labelElem.className = 'truncate text-indigo-300';
     }
   };
 
