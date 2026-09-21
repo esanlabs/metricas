@@ -4,6 +4,7 @@
  * ============================================================================
  */
 
+// ⚠️ REEMPLAZA ESTA URL POR LA NUEVA URL QUE COPIASTE EN APPS SCRIPT:
 const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
 let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [], ultimaActualizacion: "" };
@@ -540,7 +541,7 @@ function renderModalTable(records) {
     return;
   }
 
-  records.slice(0, 100).forEach(r => { // Renderiza máximo 100 por rendimiento
+  records.slice(0, 100).forEach(r => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-800/50 transition-colors';
     
