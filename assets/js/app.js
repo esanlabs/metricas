@@ -6,7 +6,7 @@
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
-let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [] };
+let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [], ultimaActualizacion: "" };
 let filteredDataGlobal = { req: [], ser: [] };
 let modalCurrentRecords = [];
 let serviceCostMap = {};
@@ -136,6 +136,17 @@ async function fetchDashboardData() {
       badge.className = 'px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
       
       rawData = result.data;
+
+      // ACTUALIZAR ETIQUETA DE ÚLTIMA ACTUALIZACIÓN
+      if (rawData.ultimaActualizacion) {
+        const updateContainer = document.getElementById('last-update-info');
+        const updateText = document.getElementById('last-update-text');
+        if (updateContainer && updateText) {
+          updateText.textContent = rawData.ultimaActualizacion;
+          updateContainer.classList.remove('hidden');
+        }
+      }
+
       buildServiceCostMap();
       populateFilterOptions();
       processAndRenderDashboard();
@@ -197,283 +208,304 @@ function populateFilterOptions() {
   fillCheckboxDropdown('dropdown-estado', 'filter-estado-cb', Array.from(estados).sort());
   fillCheckboxDropdown('dropdown-area', 'filter-area-cb', Array.from(areas).sort());
   fillCheckboxDropdown('dropdown-servicio', 'filter-servicio-cb', Array.from(servicios).sort());
+  
+  updateFilterLabels();
 }
 
-function fillCheckboxDropdown(dropdownId, className, options) {
+function fillCheckboxDropdown(dropdownId, cbClass, optionsArray) {
   const dropdown = document.getElementById(dropdownId);
-  const optionsList = dropdown.querySelector('.options-list');
-  optionsList.innerHTML = '';
+  const container = dropdown.querySelector('.options-list');
+  container.innerHTML = '';
 
-  options.forEach(opt => {
+  optionsArray.forEach(opt => {
+    if (!opt) return;
     const label = document.createElement('label');
     label.className = 'option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs';
     label.innerHTML = `
-      <input type="checkbox" value="${opt}" class="filter-cb ${className} rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
-      <span class="truncate">${opt}</span>
+      <input type="checkbox" value="${opt}" class="filter-cb ${cbClass} rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
+      <span class="truncate" title="${opt}">${opt}</span>
     `;
-    optionsList.appendChild(label);
+    container.appendChild(label);
   });
 }
 
 function setupFilterListeners() {
   document.addEventListener('change', (e) => {
-    if (e.target.matches('.filter-cb')) {
+    if (e.target && e.target.classList.contains('filter-cb')) {
       updateFilterLabels();
       processAndRenderDashboard();
     }
   });
 
-  document.getElementById('btn-reset-filters').addEventListener('click', () => {
-    document.querySelectorAll('.filter-cb').forEach(cb => { cb.checked = true; });
-    document.querySelectorAll('.dropdown-container input[type="text"]').forEach(input => {
-      input.value = '';
-      filterDropdownOptions(input.closest('div[id^="dropdown-"]').id, '');
+  const btnReset = document.getElementById('btn-reset-filters');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      document.querySelectorAll('.filter-cb').forEach(cb => cb.checked = true);
+      updateFilterLabels();
+      processAndRenderDashboard();
     });
-    updateFilterLabels();
-    processAndRenderDashboard();
-  });
-}
-
-function getSelectedValues(className) {
-  return Array.from(document.querySelectorAll(`.${className}:checked`)).map(cb => cb.value);
+  }
 }
 
 function updateFilterLabels() {
-  const updateLabel = (className, labelId, defaultText) => {
-    const all = document.querySelectorAll(`.${className}`);
-    const selected = document.querySelectorAll(`.${className}:checked`);
-    const labelElem = document.getElementById(labelId);
-
-    if (selected.length === 0) {
-      labelElem.textContent = 'Ninguno';
-      labelElem.className = 'truncate text-rose-400 font-semibold';
-    } else if (selected.length === all.length) {
-      labelElem.textContent = defaultText;
-      labelElem.className = 'truncate text-slate-200';
-    } else if (selected.length === 1) {
-      labelElem.textContent = selected[0].value;
-      labelElem.className = 'truncate text-indigo-300';
-    } else {
-      labelElem.textContent = `${selected.length} seleccionados`;
-      labelElem.className = 'truncate text-indigo-300';
-    }
-  };
-
-  updateLabel('filter-anio-cb', 'label-filter-anio', 'Todos seleccionados');
-  updateLabel('filter-estado-cb', 'label-filter-estado', 'Todos seleccionados');
-  updateLabel('filter-area-cb', 'label-filter-area', 'Todas seleccionadas');
-  updateLabel('filter-servicio-cb', 'label-filter-servicio', 'Todos seleccionados');
+  updateSingleLabel('dropdown-anio', 'label-filter-anio', 'Años');
+  updateSingleLabel('dropdown-estado', 'label-filter-estado', 'Estados');
+  updateSingleLabel('dropdown-area', 'label-filter-area', 'Áreas');
+  updateSingleLabel('dropdown-servicio', 'label-filter-servicio', 'Servicios');
 }
 
-/**
- * REGLA DE NEGOCIO: Excluye registros incompletos
- */
-function isValidRecord(item, isService = false) {
-  if (!item.fCreacion || item.fCreacion.toString().trim() === '' || item.fCreacion === 'NaN') {
-    return false;
-  }
-  const dCreate = new Date(item.fCreacion);
-  if (isNaN(dCreate.getTime())) return false;
+function updateSingleLabel(dropdownId, labelId, entityName) {
+  const dropdown = document.getElementById(dropdownId);
+  const label = document.getElementById(labelId);
+  const checkboxes = dropdown.querySelectorAll('.options-list input[type="checkbox"]');
+  const checked = dropdown.querySelectorAll('.options-list input[type="checkbox"]:checked');
 
-  if (isService) {
-    const sName = item.Servicio || item.nomServicio;
-    if (!sName || sName.toString().trim() === '') return false;
+  if (checked.length === checkboxes.length) {
+    label.textContent = 'Todos seleccionados';
+  } else if (checked.length === 0) {
+    label.textContent = 'Ninguno seleccionado';
+  } else if (checked.length === 1) {
+    label.textContent = checked[0].value;
+  } else {
+    label.textContent = `${checked.length} seleccionados`;
   }
+}
 
-  return true;
+function getSelectedFilterValues(cbClass) {
+  const checkboxes = document.querySelectorAll(`.${cbClass}:checked`);
+  return Array.from(checkboxes).map(cb => cb.value);
 }
 
 function processAndRenderDashboard() {
-  const selAnios = getSelectedValues('filter-anio-cb');
-  const selEstados = getSelectedValues('filter-estado-cb');
-  const selAreas = getSelectedValues('filter-area-cb');
-  const selServicios = getSelectedValues('filter-servicio-cb');
+  const selectedAnios = getSelectedFilterValues('filter-anio-cb');
+  const selectedEstados = getSelectedFilterValues('filter-estado-cb');
+  const selectedAreas = getSelectedFilterValues('filter-area-cb');
+  const selectedServicios = getSelectedFilterValues('filter-servicio-cb');
 
-  let exReq2025 = 0, exReq2026 = 0, exSer2025 = 0, exSer2026 = 0;
+  // Filtrado REQ
+  let filteredReq = [];
+  let excludedReq2025 = 0, excludedReq2026 = 0;
 
-  const filterList = (list, yearStr, checkServicio = false, onExcluded) => {
-    if (!selAnios.includes(yearStr)) return [];
-    
-    return list.filter(item => {
-      const valid = isValidRecord(item, checkServicio);
-      if (!valid) {
-        onExcluded();
-        return false;
-      }
-
-      if (selEstados.length > 0 && item.estadoTicket && !selEstados.includes(item.estadoTicket)) {
-        return false;
-      }
-      if (selAreas.length > 0 && item.areaSolicitante && !selAreas.includes(item.areaSolicitante)) {
-        return false;
-      }
-      
-      if (checkServicio && selServicios.length > 0) {
-        const sName = item.Servicio || item.nomServicio;
-        if (sName && !selServicios.includes(sName)) return false;
-      }
-
-      return true;
+  if (selectedAnios.includes('2025')) {
+    rawData.req2025.forEach(item => {
+      if (!item.fechaInicio || item.fechaInicio === '') { excludedReq2025++; return; }
+      if (selectedEstados.length && !selectedEstados.includes(item.estadoTicket)) return;
+      if (selectedAreas.length && !selectedAreas.includes(item.areaSolicitante)) return;
+      filteredReq.push({ ...item, anio: '2025' });
     });
-  };
+  }
 
-  const cleanReq2025 = filterList(rawData.req2025, '2025', false, () => exReq2025++);
-  const cleanReq2026 = filterList(rawData.req2026, '2026', false, () => exReq2026++);
-  const cleanSer2025 = filterList(rawData.ser2025, '2025', true, () => exSer2025++);
-  const cleanSer2026 = filterList(rawData.ser2026, '2026', true, () => exSer2026++);
-
-  // Guardar datos filtrados a nivel global para el Modal
-  filteredDataGlobal.req = [...cleanReq2025, ...cleanReq2026];
-  filteredDataGlobal.ser = [...cleanSer2025, ...cleanSer2026];
-
-  // Auditoría
-  document.getElementById('audit-req2025').textContent = exReq2025;
-  document.getElementById('audit-req2026').textContent = exReq2026;
-  document.getElementById('audit-ser2025').textContent = exSer2025;
-  document.getElementById('audit-ser2026').textContent = exSer2026;
-  const totalExcluded = exReq2025 + exReq2026 + exSer2025 + exSer2026;
-  document.getElementById('audit-total-excluded').textContent = `${totalExcluded} Excluidos`;
-
-  // Conteo mensual
-  const reqMonthly2025 = getMonthlyCounts(cleanReq2025);
-  const reqMonthly2026 = getMonthlyCounts(cleanReq2026);
-  const serMonthly2025 = getMonthlyCounts(cleanSer2025);
-  const serMonthly2026 = getMonthlyCounts(cleanSer2026);
-
-  // Tiempos promedio
-  const reqTime2025 = getMonthlyAvgVidaTicket(cleanReq2025);
-  const reqTime2026 = getMonthlyAvgVidaTicket(cleanReq2026);
-  const serTime2025 = getMonthlyAvgVidaTicketSER(cleanSer2025);
-  const serTime2026 = getMonthlyAvgVidaTicketSER(cleanSer2026);
-
-  // Costos acumulados
-  const { monthlyCosts2025, monthlyCosts2026, grandTotalCost } = calculateMonthlyServiceCosts(cleanSer2025, cleanSer2026);
-
-  // KPIs
-  const totalReq = cleanReq2025.length + cleanReq2026.length;
-  const totalSer = cleanSer2025.length + cleanSer2026.length;
-  document.getElementById('kpi-req-total').textContent = totalReq;
-  document.getElementById('kpi-ser-total').textContent = totalSer;
-
-  const activeReqMonths = [...reqMonthly2025, ...reqMonthly2026].filter(v => v > 0).length || 1;
-  const activeSerMonths = [...serMonthly2025, ...serMonthly2026].filter(v => v > 0).length || 1;
-  document.getElementById('kpi-req-prom').textContent = (totalReq / activeReqMonths).toFixed(1);
-  document.getElementById('kpi-ser-prom').textContent = (totalSer / activeSerMonths).toFixed(1);
-  document.getElementById('kpi-costo-total').textContent = `S/ ${grandTotalCost.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-  renderCharts({
-    req2025: reqMonthly2025, req2026: reqMonthly2026,
-    ser2025: serMonthly2025, ser2026: serMonthly2026,
-    reqTime2025, reqTime2026, serTime2025, serTime2026,
-    monthlyCosts2025, monthlyCosts2026,
-    selAnios
-  });
-}
-
-function getMonthlyCounts(items) {
-  const counts = Array(12).fill(0);
-  items.forEach(item => {
-    const d = new Date(item.fCreacion);
-    if (!isNaN(d.getTime())) {
-      counts[d.getMonth()]++;
-    }
-  });
-  return counts;
-}
-
-function calculateMonthlyServiceCosts(ser2025, ser2026) {
-  const monthlyCosts2025 = Array(12).fill(0);
-  const monthlyCosts2026 = Array(12).fill(0);
-  let grandTotalCost = 0;
-
-  const processList = (items, targetArray) => {
-    items.forEach(item => {
-      const rawServiceName = item.Servicio || item.nomServicio;
-      if (item.fCreacion && rawServiceName) {
-        const d = new Date(item.fCreacion);
-        if (!isNaN(d.getTime())) {
-          const nameKey = rawServiceName.toString().trim().toLowerCase();
-          const info = serviceCostMap[nameKey];
-          
-          const unitCost = info ? info.costo : 0;
-          const monthIndex = d.getMonth();
-
-          targetArray[monthIndex] += unitCost;
-          grandTotalCost += unitCost;
-        }
-      }
+  if (selectedAnios.includes('2026')) {
+    rawData.req2026.forEach(item => {
+      if (!item.fechaInicio || item.fechaInicio === '') { excludedReq2026++; return; }
+      if (selectedEstados.length && !selectedEstados.includes(item.estadoTicket)) return;
+      if (selectedAreas.length && !selectedAreas.includes(item.areaSolicitante)) return;
+      filteredReq.push({ ...item, anio: '2026' });
     });
-  };
+  }
 
-  processList(ser2025, monthlyCosts2025);
-  processList(ser2026, monthlyCosts2026);
+  // Filtrado SER
+  let filteredSer = [];
+  let excludedSer2025 = 0, excludedSer2026 = 0;
 
-  return { monthlyCosts2025, monthlyCosts2026, grandTotalCost };
+  if (selectedAnios.includes('2025')) {
+    rawData.ser2025.forEach(item => {
+      if (!item.fechaInicio || item.fechaInicio === '') { excludedSer2025++; return; }
+      const sName = item.Servicio || item.nomServicio;
+      if (selectedServicios.length && !selectedServicios.includes(sName)) return;
+      if (selectedAreas.length && !selectedAreas.includes(item.areaSolicitante)) return;
+      filteredSer.push({ ...item, anio: '2025', sName: sName });
+    });
+  }
+
+  if (selectedAnios.includes('2026')) {
+    rawData.ser2026.forEach(item => {
+      if (!item.fechaInicio || item.fechaInicio === '') { excludedSer2026++; return; }
+      const sName = item.Servicio || item.nomServicio;
+      if (selectedServicios.length && !selectedServicios.includes(sName)) return;
+      if (selectedAreas.length && !selectedAreas.includes(item.areaSolicitante)) return;
+      filteredSer.push({ ...item, anio: '2026', sName: sName });
+    });
+  }
+
+  filteredDataGlobal.req = filteredReq;
+  filteredDataGlobal.ser = filteredSer;
+
+  // Actualizar indicadores de Auditoría
+  document.getElementById('audit-req2025').textContent = excludedReq2025;
+  document.getElementById('audit-req2026').textContent = excludedReq2026;
+  document.getElementById('audit-ser2025').textContent = excludedSer2025;
+  document.getElementById('audit-ser2026').textContent = excludedSer2026;
+  document.getElementById('audit-total-excluded').textContent = `${excludedReq2025 + excludedReq2026 + excludedSer2025 + excludedSer2026} Excluidos`;
+
+  renderKPIs(filteredReq, filteredSer);
+  renderCharts(filteredReq, filteredSer);
 }
 
-function getMonthlyAvgVidaTicket(items) {
-  const sums = Array(12).fill(0);
-  const counts = Array(12).fill(0);
+function renderKPIs(reqList, serList) {
+  document.getElementById('kpi-req-total').textContent = reqList.length.toLocaleString('es-PE');
+  document.getElementById('kpi-ser-total').textContent = serList.length.toLocaleString('es-PE');
 
-  items.forEach(item => {
-    if (item.vidaTicket !== null && item.vidaTicket !== undefined && item.vidaTicket !== '') {
-      const vida = parseFloat(item.vidaTicket);
-      const d = new Date(item.fCreacion);
-      if (!isNaN(d.getTime()) && !isNaN(vida) && vida >= 0) {
-        const month = d.getMonth();
-        sums[month] += vida;
-        counts[month]++;
+  // Promedios por meses activos
+  const reqMonths = new Set(reqList.map(r => r.fechaInicio.substring(0, 7))).size || 1;
+  const serMonths = new Set(serList.map(s => s.fechaInicio.substring(0, 7))).size || 1;
+
+  document.getElementById('kpi-req-prom').textContent = (reqList.length / reqMonths).toFixed(1);
+  document.getElementById('kpi-ser-prom').textContent = (serList.length / serMonths).toFixed(1);
+
+  // Cálculo de Costo Total Ejecutado
+  let totalCost = 0;
+  serList.forEach(s => {
+    const sName = (s.sName || '').toLowerCase().trim();
+    if (serviceCostMap[sName]) {
+      totalCost += serviceCostMap[sName].costo;
+    }
+  });
+
+  document.getElementById('kpi-costo-total').textContent = `S/ ${totalCost.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function renderCharts(reqList, serList) {
+  // 1. REQ Mensual
+  const req2025ByMonth = new Array(12).fill(0);
+  const req2026ByMonth = new Array(12).fill(0);
+
+  reqList.forEach(r => {
+    const m = parseInt(r.fechaInicio.substring(5, 7), 10) - 1;
+    if (r.anio === '2025') req2025ByMonth[m]++;
+    if (r.anio === '2026') req2026ByMonth[m]++;
+  });
+
+  createOrUpdateChart('chartReq', 'bar', MONTH_NAMES, [
+    { label: '2025', data: req2025ByMonth, backgroundColor: COLORS.blue2025 },
+    { label: '2026', data: req2026ByMonth, backgroundColor: COLORS.orange2026 }
+  ]);
+
+  // 2. SER Mensual
+  const ser2025ByMonth = new Array(12).fill(0);
+  const ser2026ByMonth = new Array(12).fill(0);
+
+  serList.forEach(s => {
+    const m = parseInt(s.fechaInicio.substring(5, 7), 10) - 1;
+    if (s.anio === '2025') ser2025ByMonth[m]++;
+    if (s.anio === '2026') ser2026ByMonth[m]++;
+  });
+
+  createOrUpdateChart('chartSer', 'bar', MONTH_NAMES, [
+    { label: '2025', data: ser2025ByMonth, backgroundColor: COLORS.teal2025 },
+    { label: '2026', data: ser2026ByMonth, backgroundColor: COLORS.purple2026 }
+  ]);
+
+  // 3. Costo Acumulado
+  const cost2025ByMonth = new Array(12).fill(0);
+  const cost2026ByMonth = new Array(12).fill(0);
+
+  serList.forEach(s => {
+    const m = parseInt(s.fechaInicio.substring(5, 7), 10) - 1;
+    const sName = (s.sName || '').toLowerCase().trim();
+    const cost = serviceCostMap[sName] ? serviceCostMap[sName].costo : 0;
+
+    if (s.anio === '2025') cost2025ByMonth[m] += cost;
+    if (s.anio === '2026') cost2026ByMonth[m] += cost;
+  });
+
+  createOrUpdateChart('chartCost', 'line', MONTH_NAMES, [
+    { label: '2025 (S/)', data: cost2025ByMonth, borderColor: COLORS.teal2025, backgroundColor: COLORS.teal2025, fill: false, tension: 0.3 },
+    { label: '2026 (S/)', data: cost2026ByMonth, borderColor: COLORS.purple2026, backgroundColor: COLORS.purple2026, fill: false, tension: 0.3 }
+  ], true);
+
+  // 4. Tiempos Promedio de Atención (Vida del Ticket - REQ & SER)
+  renderTimeCharts(reqList, serList);
+}
+
+function renderTimeCharts(reqList, serList) {
+  // Tiempos REQ
+  const timeReq2025 = calculateAverageTimeByMonth(reqList.filter(r => r.anio === '2025'));
+  const timeReq2026 = calculateAverageTimeByMonth(reqList.filter(r => r.anio === '2026'));
+
+  createOrUpdateChart('chartTimeReq', 'bar', MONTH_NAMES, [
+    { label: '2025 (Días)', data: timeReq2025, backgroundColor: COLORS.blue2025 },
+    { label: '2026 (Días)', data: timeReq2026, backgroundColor: COLORS.orange2026 }
+  ]);
+
+  // Tiempos SER
+  const timeSer2025 = calculateAverageTimeByMonth(serList.filter(s => s.anio === '2025'));
+  const timeSer2026 = calculateAverageTimeByMonth(serList.filter(s => s.anio === '2026'));
+
+  createOrUpdateChart('chartTimeSer', 'bar', MONTH_NAMES, [
+    { label: '2025 (Días)', data: timeSer2025, backgroundColor: COLORS.teal2025 },
+    { label: '2026 (Días)', data: timeSer2026, backgroundColor: COLORS.purple2026 }
+  ]);
+}
+
+function calculateAverageTimeByMonth(list) {
+  const sums = new Array(12).fill(0);
+  const counts = new Array(12).fill(0);
+
+  list.forEach(item => {
+    if (item.fechaInicio && item.fechaFin) {
+      const start = new Date(item.fechaInicio);
+      const end = new Date(item.fechaFin);
+      const diffDays = Math.max(0, (end - start) / (1000 * 60 * 60 * 24));
+      const m = parseInt(item.fechaInicio.substring(5, 7), 10) - 1;
+
+      if (!isNaN(diffDays)) {
+        sums[m] += diffDays;
+        counts[m]++;
       }
     }
   });
 
-  return sums.map((sum, i) => (counts[i] > 0 ? parseFloat((sum / counts[i]).toFixed(1)) : 0));
+  return sums.map((sum, idx) => counts[idx] > 0 ? parseFloat((sum / counts[idx]).toFixed(1)) : 0);
 }
 
-function getMonthlyAvgVidaTicketSER(items) {
-  const sums = Array(12).fill(0);
-  const counts = Array(12).fill(0);
+function createOrUpdateChart(canvasId, type, labels, datasets, isCurrency = false) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
 
-  items.forEach(item => {
-    if (item.fCobertura && item.fCobertura.toString().trim() !== '') {
-      const dCreate = new Date(item.fCreacion);
-      const dCover = new Date(item.fCobertura);
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+  }
 
-      if (!isNaN(dCreate.getTime()) && !isNaN(dCover.getTime())) {
-        const diffDays = (dCover - dCreate) / (1000 * 60 * 60 * 24);
-        if (diffDays >= 0) {
-          const month = dCreate.getMonth();
-          sums[month] += diffDays;
-          counts[month]++;
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: type,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+        datalabels: {
+          color: '#f8fafc',
+          anchor: 'end',
+          align: 'end',
+          font: { size: 9, weight: 'bold' },
+          formatter: (val) => {
+            if (!val || val === 0) return '';
+            return isCurrency ? `S/ ${val.toLocaleString('es-PE')}` : val;
+          }
         }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
       }
     }
   });
-
-  return sums.map((sum, i) => (counts[i] > 0 ? parseFloat((sum / counts[i]).toFixed(1)) : 0));
 }
 
 /**
- * LÓGICA DEL MODAL DE REGISTROS
+ * MÓDULO MODAL DE REGISTROS
  */
 function openRecordsModal(type) {
   const modal = document.getElementById('records-modal');
   const title = document.getElementById('records-modal-title');
-  const subtitle = document.getElementById('records-modal-subtitle');
   const searchInput = document.getElementById('records-search-input');
   
+  modalCurrentRecords = type === 'req' ? filteredDataGlobal.req : filteredDataGlobal.ser;
+  
+  title.textContent = type === 'req' ? '📋 Registros Filtrados - Requerimientos (REQ)' : '📋 Registros Filtrados - Servicios (SER)';
   searchInput.value = '';
   
-  if (type === 'req') {
-    title.innerHTML = '📋 Registros de Requerimientos (REQ)';
-    subtitle.textContent = 'Lista detallada de requerimientos que alimentan el gráfico según los filtros aplicados.';
-    modalCurrentRecords = filteredDataGlobal.req;
-  } else {
-    title.innerHTML = '📋 Registros de Servicios (SER)';
-    subtitle.textContent = 'Lista detallada de servicios que alimentan las métricas y costos según los filtros aplicados.';
-    modalCurrentRecords = filteredDataGlobal.ser;
-  }
-
   renderModalTable(modalCurrentRecords);
   modal.classList.remove('hidden');
 }
@@ -482,183 +514,53 @@ function closeRecordsModal() {
   document.getElementById('records-modal').classList.add('hidden');
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '-';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function renderModalTable(records) {
-  const tbody = document.getElementById('records-table-body');
-  const countBadge = document.getElementById('records-count-badge');
-  tbody.innerHTML = '';
-
-  countBadge.textContent = `${records.length} Registros`;
-
-  if (records.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="py-8 text-center text-slate-500 italic">
-          No se encontraron registros activos para este criterio.
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  records.forEach(item => {
-    const ticket = item.ticket || item.codTicket || item.id || '-';
-    const servicio = item.Servicio || item.nomServicio || item.solicitud || item.resumen || '-';
-    const fecha = formatDate(item.fCreacion);
-    const solicitante = item.solicitante || item.areaSolicitante || item.usuario || '-';
-
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/60 transition-colors';
-    tr.innerHTML = `
-      <td class="py-2.5 px-3 font-mono text-indigo-400 font-semibold">${ticket}</td>
-      <td class="py-2.5 px-3 font-medium">${servicio}</td>
-      <td class="py-2.5 px-3 text-slate-400">${fecha}</td>
-      <td class="py-2.5 px-3 text-slate-300">${solicitante}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
 function filterModalTable(query) {
   const q = query.toLowerCase().trim();
-  if (!q) {
-    renderModalTable(modalCurrentRecords);
-    return;
-  }
+  const filtered = modalCurrentRecords.filter(r => {
+    const ticket = (r.numTicket || r.Ticket || '').toString().toLowerCase();
+    const service = (r.sName || r.nomServicio || r.Servicio || r.resumen || '').toString().toLowerCase();
+    const date = (r.fechaInicio || '').toLowerCase();
+    const reqBy = (r.areaSolicitante || r.solicitante || '').toString().toLowerCase();
 
-  const filtered = modalCurrentRecords.filter(item => {
-    const ticket = (item.ticket || item.codTicket || item.id || '').toString().toLowerCase();
-    const servicio = (item.Servicio || item.nomServicio || item.solicitud || item.resumen || '').toString().toLowerCase();
-    const fecha = formatDate(item.fCreacion).toLowerCase();
-    const solicitante = (item.solicitante || item.areaSolicitante || item.usuario || '').toString().toLowerCase();
-
-    return ticket.includes(q) || servicio.includes(q) || fecha.includes(q) || solicitante.includes(q);
+    return ticket.includes(q) || service.includes(q) || date.includes(q) || reqBy.includes(q);
   });
 
   renderModalTable(filtered);
 }
 
-function renderCharts({ req2025, req2026, ser2025, ser2026, reqTime2025, reqTime2026, serTime2025, serTime2026, monthlyCosts2025, monthlyCosts2026, selAnios }) {
-  Object.values(chartInstances).forEach(chart => chart.destroy());
+function renderModalTable(records) {
+  const tbody = document.getElementById('records-table-body');
+  const badge = document.getElementById('records-count-badge');
+  tbody.innerHTML = '';
 
-  const show2025 = selAnios.includes('2025');
-  const show2026 = selAnios.includes('2026');
+  badge.textContent = `${records.length} Registros`;
 
-  // 1. REQ por Mes
-  chartInstances.req = new Chart(document.getElementById('chartReq'), {
-    type: 'bar',
-    data: {
-      labels: MONTH_NAMES,
-      datasets: [
-        ...(show2025 ? [{ label: 'REQ 2025', data: req2025, backgroundColor: COLORS.blue2025 }] : []),
-        ...(show2026 ? [{ label: 'REQ 2026', data: req2026, backgroundColor: COLORS.orange2026 }] : [])
-      ]
-    },
-    options: getChartCommonOptions()
-  });
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-500">No se encontraron registros que coincidan.</td></tr>`;
+    return;
+  }
 
-  // 2. SER por Mes
-  chartInstances.ser = new Chart(document.getElementById('chartSer'), {
-    type: 'bar',
-    data: {
-      labels: MONTH_NAMES,
-      datasets: [
-        ...(show2025 ? [{ label: 'SER 2025', data: ser2025, backgroundColor: COLORS.teal2025 }] : []),
-        ...(show2026 ? [{ label: 'SER 2026', data: ser2026, backgroundColor: COLORS.purple2026 }] : [])
-      ]
-    },
-    options: getChartCommonOptions()
-  });
+  records.slice(0, 100).forEach(r => { // Renderiza máximo 100 por rendimiento
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-800/50 transition-colors';
+    
+    const ticket = r.numTicket || r.Ticket || '-';
+    const service = r.sName || r.nomServicio || r.Servicio || r.resumen || '-';
+    const date = r.fechaInicio || '-';
+    const reqBy = r.areaSolicitante || r.solicitante || '-';
 
-  // 3. Costo Acumulado
-  chartInstances.cost = new Chart(document.getElementById('chartCost'), {
-    type: 'bar',
-    data: {
-      labels: MONTH_NAMES,
-      datasets: [
-        ...(show2025 ? [{ label: 'Costo 2025 (S/)', data: monthlyCosts2025, backgroundColor: COLORS.teal2025 }] : []),
-        ...(show2026 ? [{ label: 'Costo 2026 (S/)', data: monthlyCosts2026, backgroundColor: COLORS.purple2026 }] : [])
-      ]
-    },
-    options: {
-      ...getChartCommonOptions(''),
-      plugins: {
-        legend: { labels: { color: '#cbd5e1', font: { size: 11, weight: 'bold' } } },
-        datalabels: {
-          anchor: 'end',
-          align: 'top',
-          color: '#f8fafc',
-          font: { weight: 'bold', size: 9 },
-          formatter: (value) => (value > 0 ? `S/ ${value.toLocaleString('es-PE')}` : ''),
-          offset: 4,
-          clip: false
-        }
-      }
-    }
-  });
-
-  // 4. Tiempo Promedio REQ
-  chartInstances.timeReq = new Chart(document.getElementById('chartTimeReq'), {
-    type: 'line',
-    data: {
-      labels: MONTH_NAMES,
-      datasets: [
-        ...(show2025 ? [{ label: 'Días Prom. 2025', data: reqTime2025, borderColor: COLORS.blue2025, backgroundColor: COLORS.blue2025, tension: 0.2 }] : []),
-        ...(show2026 ? [{ label: 'Días Prom. 2026', data: reqTime2026, borderColor: COLORS.orange2026, backgroundColor: COLORS.orange2026, tension: 0.2 }] : [])
-      ]
-    },
-    options: getChartCommonOptions(' d')
-  });
-
-  // 5. Tiempo Promedio SER
-  chartInstances.timeSer = new Chart(document.getElementById('chartTimeSer'), {
-    type: 'line',
-    data: {
-      labels: MONTH_NAMES,
-      datasets: [
-        ...(show2025 ? [{ label: 'Días Prom. 2025', data: serTime2025, borderColor: COLORS.teal2025, backgroundColor: COLORS.teal2025, tension: 0.2 }] : []),
-        ...(show2026 ? [{ label: 'Días Prom. 2026', data: serTime2026, borderColor: COLORS.purple2026, backgroundColor: COLORS.purple2026, tension: 0.2 }] : [])
-      ]
-    },
-    options: getChartCommonOptions(' d')
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono text-indigo-400 font-semibold">${ticket}</td>
+      <td class="py-2.5 px-3 truncate max-w-xs" title="${service}">${service}</td>
+      <td class="py-2.5 px-3 text-slate-400">${date}</td>
+      <td class="py-2.5 px-3 text-slate-400 truncate max-w-xs" title="${reqBy}">${reqBy}</td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-function getChartCommonOptions(suffix = '') {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: '#cbd5e1', font: { size: 11, weight: 'bold' } } },
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#f8fafc',
-        font: { weight: 'bold', size: 10 },
-        formatter: (value) => (value > 0 ? `${value}${suffix}` : ''),
-        offset: 4,
-        clip: false
-      }
-    },
-    scales: {
-      x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-      y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, beginAtZero: true, grace: '15%' }
-    }
-  };
-}
-
-function toggleChartExpand(containerId) {
-  const container = document.getElementById(containerId);
-  container.classList.toggle('lg:col-span-2');
-  container.classList.toggle('h-[500px]');
-  
-  setTimeout(() => {
-    Object.values(chartInstances).forEach(chart => chart.resize());
-  }, 200);
+function toggleChartExpand(cardId) {
+  const card = document.getElementById(cardId);
+  card.classList.toggle('lg:col-span-2');
+  window.dispatchEvent(new Event('resize'));
 }
