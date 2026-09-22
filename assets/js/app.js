@@ -14,7 +14,7 @@
  */
 
 // URL del punto de enlace de la API expuesta por el Web App en Google Apps Script
-const API_URL = 'https://script.google.com/macros/s/TU_WEB_APP_ID_AQUI/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
 // Estructura contenedora de los datos brutos recibidos del servidor
 let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [], ultimaActualizacion: "" };
