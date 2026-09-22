@@ -9,12 +9,12 @@
  * v2.0    | 17/06/2026 | ESAN/AV  | Mapeo dinámico de filtros desplegables y KPIs.
  * v2.5    | 18/06/2026 | ESAN/AV  | Implementación de cálculo de costos acumulados y promedios.
  * v2.8    | 18/06/2026 | ESAN/AV  | Módulo de auditoría de registros excluidos y tolerancia a encabezados.
- * v3.0    | 21/09/2026 | ESAN/AV  | Comentarios exhaustivos línea por línea y optimización de búsquedas en tablas.
+ * v3.0    | 21/09/2026 | ESAN/AV  | Comentarios exhaustivos línea por línea y corrección de timeout de petición.
  * ---------------------------------------------------------------------------------
  */
 
-// URL del punto de enlace de la API expuesta por el Web App en Google Apps Script
-const API_URL = 'https://script.google.com/macros/s/AKfycbyPSfKGhmG31-hS0iRqW5_ZZKzhEQWkDdk-uo0zumn9brLxVpkPzHxiI6knc8PvT4ZbrQ/exec';
+// ⚠️ REEMPLAZA ESTA URL CON TU URL FINAL DE GOOGLE APPS SCRIPT:
+const API_URL = 'https://script.google.com/macros/s/AKfycbz4vWZTmXN8Y-XUcKxZANNkfGEnfE-LRbVLpsR_6es7RdkL8qVVYpuodIZpGj_TkOR1yA/exec';
 
 // Estructura contenedora de los datos brutos recibidos del servidor
 let rawData = { req2025: [], req2026: [], ser2025: [], ser2026: [], datos: [], ultimaActualizacion: "" };
