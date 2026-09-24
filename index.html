@@ -1,48 +1,24 @@
-<!--
- * PROYECTO: MÉTRICAS AV 3.0 (UNIVERSIDAD ESAN)
- * COMPONENTE: index.html (Vista Principal del Dashboard Web)
- * CONTROL DE VERSIONES:
- * ---------------------------------------------------------------------------------
- * Versión | Fecha      | Autor    | Descripción
- * ---------------------------------------------------------------------------------
- * v1.0    | 10/01/2025 | ESAN/AV  | Maquetación inicial con Tailwind CSS y Chart.js.
- * v2.0    | 17/06/2026 | ESAN/AV  | Implementación de filtros desplegables interactivos.
- * v2.5    | 18/06/2026 | ESAN/AV  | Modales integrados para visores de errores y registros.
- * v2.8    | 18/06/2026 | ESAN/AV  | Incorporación de la sección de auditoría de calidad de datos.
- * v3.0    | 21/09/2026 | ESAN/AV  | Comentarios descriptivos exhaustivos y refinamiento de accesibilidad.
- * ---------------------------------------------------------------------------------
--->
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <!-- Declaración de codificación de caracteres en UTF-8 -->
   <meta charset="UTF-8">
-  <!-- Configuración de escala responsiva para dispositivos móviles y escritorio -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Título del documento de la pestaña del navegador -->
   <title>Dashboard de Métricas AV</title>
   
-  <!-- Carga del framework Tailwind CSS mediante CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Carga de la biblioteca Chart.js para generación de gráficos dinámicos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Carga del plugin DataLabels para renderizar valores sobre las barras/líneas de los gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   
-  <!-- Configuración personalizada del tema oscuro y paleta de colores corporativos -->
   <script>
-    // Inicialización de la configuración del objeto Tailwind
     tailwind.config = {
-      // Habilita el modo oscuro activado por clase CSS
       darkMode: 'class',
       theme: {
         extend: {
-          // Extensión de la paleta de colores para la marca
           colors: {
             brand: {
-              dark: '#0f172a',   // Color oscuro para el fondo principal
-              card: '#1e293b',   // Color para contenedores de tarjetas
-              accent: '#3b82f6'  // Color azul de acento para resaltados
+              dark: '#0f172a',
+              card: '#1e293b',
+              accent: '#3b82f6'
             }
           }
         }
@@ -55,67 +31,53 @@
   <!-- ENCABEZADO PRINCIPAL DE LA APLICACIÓN -->
   <header class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 pb-4 border-b border-slate-800 gap-4">
     <div>
-      <!-- Título principal del sistema de métricas -->
       <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
         Dashboard de Métricas AV
       </h1>
-      <!-- Subtítulo descriptivo del periodo analizado -->
       <p class="text-sm text-slate-400 mt-1">
         Análisis comparativo de Requerimientos y Servicios (2025 - 2026)
       </p>
-      <!-- Contenedor dinámico para la estampa de tiempo de actualización -->
       <div id="last-update-info" class="text-xs text-indigo-400 font-medium mt-1.5 flex items-center gap-1.5 hidden">
         <span>🕒</span>
         <span id="last-update-text">Cargando fecha de actualización...</span>
       </div>
     </div>
-    <!-- Botón de consulta de consola e indicador de estado de conexión -->
     <div class="flex items-center gap-3">
-      <!-- Botón que abre el modal visor de logs y errores -->
       <button onclick="toggleLogModal()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5">
         📋 Registro de Errores
       </button>
-      <!-- Etiqueta con badge que refleja el estado de comunicación con la API -->
       <span id="status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
         Conectando...
       </span>
     </div>
   </header>
 
-  <!-- MÓDULO DE FILTROS DINÁMICOS CON BUSCADOR TIPO GOOGLE SHEETS -->
+  <!-- MÓDULO DE FILTROS DINÁMICOS -->
   <section class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 mb-8 shadow-xl backdrop-blur-md relative z-20">
     <div class="flex items-center justify-between mb-4">
-      <!-- Encabezado de la sección de filtros -->
       <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
         🔍 Módulo de Filtros con Buscador
       </h2>
-      <!-- Accionable para resetear todas las selecciones de filtros -->
       <button id="btn-reset-filters" class="text-xs text-indigo-400 hover:text-indigo-300 underline transition-colors">
         Limpiar Todos los Filtros
       </button>
     </div>
     
-    <!-- Grilla responsive para distribuir los cuatro selectores -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      
-      <!-- Filtro 1: Año de Análisis -->
+      <!-- Filtro 1: Año -->
       <div class="relative dropdown-container" id="container-filter-anio">
         <label class="block text-xs font-medium text-slate-400 mb-1">Año de Análisis</label>
-        <!-- Botón disparador del menú flotante de selección de año -->
         <button type="button" onclick="toggleDropdown('dropdown-anio')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
           <span id="label-filter-anio" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
         
-        <!-- Contenido desplegable con buscador interno para el filtro de año -->
         <div id="dropdown-anio" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
           <input type="text" placeholder="Buscar..." oninput="filterDropdownOptions('dropdown-anio', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-          
           <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
             <button type="button" onclick="selectAllInDropdown('dropdown-anio', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
             <button type="button" onclick="selectAllInDropdown('dropdown-anio', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
-          
           <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1">
             <label class="option-item flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded cursor-pointer text-xs">
               <input type="checkbox" value="2025" class="filter-cb filter-anio-cb rounded border-slate-600 text-indigo-600 focus:ring-0" checked>
@@ -129,62 +91,53 @@
         </div>
       </div>
 
-      <!-- Filtro 2: Estado del Ticket -->
+      <!-- Filtro 2: Estado -->
       <div class="relative dropdown-container" id="container-filter-estado">
         <label class="block text-xs font-medium text-slate-400 mb-1">Estado del Ticket</label>
         <button type="button" onclick="toggleDropdown('dropdown-estado')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
           <span id="label-filter-estado" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        
         <div id="dropdown-estado" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
           <input type="text" placeholder="Buscar estado..." oninput="filterDropdownOptions('dropdown-estado', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-          
           <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
             <button type="button" onclick="selectAllInDropdown('dropdown-estado', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
             <button type="button" onclick="selectAllInDropdown('dropdown-estado', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
-          
           <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
 
-      <!-- Filtro 3: Área Solicitante -->
+      <!-- Filtro 3: Área -->
       <div class="relative dropdown-container" id="container-filter-area">
         <label class="block text-xs font-medium text-slate-400 mb-1">Área Solicitante</label>
         <button type="button" onclick="toggleDropdown('dropdown-area')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
           <span id="label-filter-area" class="truncate">Todas seleccionadas</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        
         <div id="dropdown-area" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
           <input type="text" placeholder="Buscar área..." oninput="filterDropdownOptions('dropdown-area', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-          
           <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
             <button type="button" onclick="selectAllInDropdown('dropdown-area', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
             <button type="button" onclick="selectAllInDropdown('dropdown-area', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
-          
           <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
 
-      <!-- Filtro 4: Tipo de Servicio -->
+      <!-- Filtro 4: Servicio -->
       <div class="relative dropdown-container" id="container-filter-servicio">
         <label class="block text-xs font-medium text-slate-400 mb-1">Tipo de Servicio</label>
         <button type="button" onclick="toggleDropdown('dropdown-servicio')" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 text-left flex items-center justify-between focus:outline-none focus:border-indigo-500">
           <span id="label-filter-servicio" class="truncate">Todos seleccionados</span>
           <span class="text-xs text-slate-400">▼</span>
         </button>
-        
         <div id="dropdown-servicio" class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 z-30 space-y-2">
           <input type="text" placeholder="Buscar servicio..." oninput="filterDropdownOptions('dropdown-servicio', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-          
           <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px]">
             <button type="button" onclick="selectAllInDropdown('dropdown-servicio', true)" class="text-indigo-400 hover:underline">Seleccionar todo</button>
             <button type="button" onclick="selectAllInDropdown('dropdown-servicio', false)" class="text-rose-400 hover:underline">Borrar</button>
           </div>
-          
           <div class="options-list max-h-48 overflow-y-auto space-y-1 pr-1"></div>
         </div>
       </div>
@@ -192,37 +145,28 @@
     </div>
   </section>
 
-  <!-- SECCIÓN DE TARJETAS DE KPIS PRINCIPALES DE RESUMEN -->
+  <!-- TARJETAS DE KPIS -->
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-    <!-- Card KPI 1: Volumen total de Requerimientos -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tickets (REQ)</p>
       <h3 id="kpi-req-total" class="text-2xl font-extrabold text-emerald-400 mt-1">0</h3>
       <p class="text-[10px] text-slate-500 mt-1">*Excluye datos faltantes</p>
     </div>
-
-    <!-- Card KPI 2: Volumen total de Servicios -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Servicios (SER)</p>
       <h3 id="kpi-ser-total" class="text-2xl font-extrabold text-indigo-400 mt-1">0</h3>
       <p class="text-[10px] text-slate-500 mt-1">*Excluye datos faltantes</p>
     </div>
-
-    <!-- Card KPI 3: Promedio mensual de Requerimientos -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prom. Tickets / Mes</p>
       <h3 id="kpi-req-prom" class="text-2xl font-extrabold text-amber-400 mt-1">0</h3>
       <p class="text-[10px] text-slate-500 mt-1">Meses activos</p>
     </div>
-
-    <!-- Card KPI 4: Promedio mensual de Servicios -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prom. Servicios / Mes</p>
       <h3 id="kpi-ser-prom" class="text-2xl font-extrabold text-cyan-400 mt-1">0</h3>
       <p class="text-[10px] text-slate-500 mt-1">Meses activos</p>
     </div>
-
-    <!-- Card KPI 5: Monto de Costo acumulado en Soles -->
     <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-lg">
       <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Costo Total Ejecutado</p>
       <h3 id="kpi-costo-total" class="text-2xl font-extrabold text-teal-400 mt-1">S/ 0.00</h3>
@@ -230,17 +174,15 @@
     </div>
   </section>
 
-  <!-- PANEL DE AUDITORÍA DE CALIDAD DE DATOS (ALERTAS DE EXCLUSIÓN) -->
+  <!-- SECCIÓN DE AUDITORÍA DE DATOS -->
   <section class="bg-rose-950/20 border border-rose-900/40 rounded-xl p-4 mb-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="text-rose-400 font-bold text-sm">⚠️ Auditoría de Calidad de Datos:</span>
-        <span class="text-xs text-slate-300">Registros excluidos por campos nulos/incompletos según regla de negocio:</span>
+        <span class="text-xs text-slate-300">Registros excluidos por campos nulos/incompletos:</span>
       </div>
-      <!-- Resumen global de filas omitidas por inconsistencias -->
       <span id="audit-total-excluded" class="text-xs font-bold bg-rose-900/60 text-rose-200 px-2.5 py-1 rounded-full border border-rose-700/50">0 Excluidos</span>
     </div>
-    <!-- Detalle numérico de auditoría discriminado por tabla y año -->
     <div id="audit-details" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs text-slate-400 border-t border-rose-900/30 pt-2">
       <div>REQ 2025: <span id="audit-req2025" class="text-slate-200 font-medium">0</span></div>
       <div>REQ 2026: <span id="audit-req2026" class="text-slate-200 font-medium">0</span></div>
@@ -249,34 +191,28 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 1: GRÁFICOS DE VOLUMEN MENSUAL DE ATENCIONES -->
+  <!-- GRÁFICOS SECCIÓN 1: VOLUMEN -->
   <section class="mb-8">
     <h2 class="text-lg font-bold text-slate-200 border-l-4 border-indigo-500 pl-3 mb-4">
       Volumen Mensual de Atenciones
     </h2>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Tarjeta del gráfico de volumen REQ -->
       <div id="card-chart-req" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Requerimientos (REQ) por Mes</h3>
           <div class="flex items-center gap-2">
-            <button onclick="openRecordsModal('req')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
-              📄 Registros
-            </button>
+            <button onclick="openRecordsModal('req')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">📄 Registros</button>
             <button onclick="toggleChartExpand('card-chart-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
           </div>
         </div>
         <div class="h-[300px]"><canvas id="chartReq"></canvas></div>
       </div>
 
-      <!-- Tarjeta del gráfico de volumen SER -->
       <div id="card-chart-ser" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Servicios (SER) por Mes</h3>
           <div class="flex items-center gap-2">
-            <button onclick="openRecordsModal('ser')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
-              📄 Registros
-            </button>
+            <button onclick="openRecordsModal('ser')" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">📄 Registros</button>
             <button onclick="toggleChartExpand('card-chart-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
           </div>
         </div>
@@ -285,7 +221,7 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 2: GRÁFICO DE COSTO ACUMULADO POR MES -->
+  <!-- GRÁFICOS SECCIÓN 2: COSTOS -->
   <section class="mb-8">
     <h2 class="text-lg font-bold text-slate-200 border-l-4 border-teal-500 pl-3 mb-4">
       Costo Acumulado Mensual de Servicios Ejecutados (en Soles S/)
@@ -294,9 +230,7 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-semibold text-slate-300">Costo Mensual Acumulado (Soles S/) por Servicios Ejecutados</h3>
         <div class="flex items-center gap-2">
-          <button onclick="openRecordsModal('ser')" class="text-xs text-teal-300 hover:text-white bg-teal-950/80 hover:bg-teal-900 border border-teal-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
-            📄 Registros
-          </button>
+          <button onclick="openRecordsModal('ser')" class="text-xs text-teal-300 hover:text-white bg-teal-950/80 hover:bg-teal-900 border border-teal-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">📄 Registros</button>
           <button onclick="toggleChartExpand('card-chart-cost')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
         </div>
       </div>
@@ -304,34 +238,28 @@
     </div>
   </section>
 
-  <!-- SECCIÓN 3: GRÁFICOS DE TIEMPOS PROMEDIO DE ATENCIÓN (VIDA DEL TICKET) -->
+  <!-- GRÁFICOS SECCIÓN 3: TIEMPOS -->
   <section class="mb-8">
     <h2 class="text-lg font-bold text-slate-200 border-l-4 border-amber-500 pl-3 mb-4">
       Tiempo Promedio de Atención (Vida del Ticket - Días)
     </h2>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Tarjeta del tiempo promedio REQ -->
       <div id="card-chart-time-req" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Tiempo Promedio de Atención - REQ (Días)</h3>
           <div class="flex items-center gap-2">
-            <button onclick="openRecordsModal('req')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
-              📄 Registros
-            </button>
+            <button onclick="openRecordsModal('req')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">📄 Registros</button>
             <button onclick="toggleChartExpand('card-chart-time-req')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
           </div>
         </div>
         <div class="h-[300px]"><canvas id="chartTimeReq"></canvas></div>
       </div>
 
-      <!-- Tarjeta del tiempo promedio SER -->
       <div id="card-chart-time-ser" class="bg-slate-900/50 border border-slate-800 rounded-xl p-5 shadow-lg relative h-[380px]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-300">Tiempo Promedio de Atención - SER (Días)</h3>
           <div class="flex items-center gap-2">
-            <button onclick="openRecordsModal('ser')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">
-              📄 Registros
-            </button>
+            <button onclick="openRecordsModal('ser')" class="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium">📄 Registros</button>
             <button onclick="toggleChartExpand('card-chart-time-ser')" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition-colors">🔍 Expandir</button>
           </div>
         </div>
@@ -340,29 +268,20 @@
     </div>
   </section>
 
-  <!-- MODAL DE VISUALIZACIÓN DE REGISTROS DETALLADOS (TABLA DRILL-DOWN) -->
+  <!-- MODAL TABLA DETALLE -->
   <div id="records-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-      <!-- Encabezado del modal -->
       <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
         <div>
-          <h3 id="records-modal-title" class="font-bold text-slate-100 flex items-center gap-2">
-            📋 Registros Filtrados
-          </h3>
+          <h3 id="records-modal-title" class="font-bold text-slate-100 flex items-center gap-2">📋 Registros Filtrados</h3>
           <p id="records-modal-subtitle" class="text-xs text-slate-400 mt-0.5">Mostrando registros activos bajo los filtros seleccionados</p>
         </div>
         <button onclick="closeRecordsModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-2">&times;</button>
       </div>
-      
-      <!-- Buscador de texto dentro de la tabla del modal -->
       <div class="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-4">
         <input type="text" id="records-search-input" oninput="filterModalTable(this.value)" placeholder="🔍 Buscar por ticket, servicio, fecha o solicitante..." class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-        <span id="records-count-badge" class="text-xs font-semibold bg-indigo-950 text-indigo-300 px-3 py-1 rounded-full border border-indigo-800">
-          0 Registros
-        </span>
+        <span id="records-count-badge" class="text-xs font-semibold bg-indigo-950 text-indigo-300 px-3 py-1 rounded-full border border-indigo-800">0 Registros</span>
       </div>
-
-      <!-- Cuerpo deslizable con la tabla de datos -->
       <div class="flex-1 overflow-y-auto p-4">
         <table class="w-full text-left border-collapse text-xs">
           <thead>
@@ -373,46 +292,33 @@
               <th class="py-2.5 px-3">Solicitante</th>
             </tr>
           </thead>
-          <tbody id="records-table-body" class="divide-y divide-slate-800 text-slate-300">
-            <!-- Las filas se renderizan dinámicamente mediante app.js -->
-          </tbody>
+          <tbody id="records-table-body" class="divide-y divide-slate-800 text-slate-300"></tbody>
         </table>
       </div>
-
-      <!-- Pie del modal -->
       <div class="p-3 bg-slate-800 border-t border-slate-700 flex justify-end">
-        <button onclick="closeRecordsModal()" class="px-4 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-lg transition-colors">
-          Cerrar
-        </button>
+        <button onclick="closeRecordsModal()" class="px-4 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-lg transition-colors">Cerrar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DE DIAGNÓSTICO Y LOGS DE CONEXIÓN -->
+  <!-- MODAL LOGS DE LOGS -->
   <div id="log-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
       <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
-        <h3 class="font-bold text-slate-100 flex items-center gap-2">
-          🛠️ Visor de Logs y Registro de Conexión
-        </h3>
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">🛠️ Visor de Logs y Registro de Conexión</h3>
         <button onclick="toggleLogModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
-      <!-- Consola estilo terminal con el historial de eventos de conexión -->
       <div class="p-4 flex-1 overflow-y-auto font-mono text-xs bg-black/50 text-emerald-400 space-y-2" id="log-console">
         <div>[SISTEMA] Inicializando módulo de monitoreo...</div>
       </div>
       <div class="p-3 bg-slate-800 border-t border-slate-700 flex justify-between items-center">
-        <button onclick="clearConsoleLog()" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors">
-          Limpiar Log
-        </button>
-        <button onclick="fetchDashboardData()" class="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded transition-colors">
-          Reintentar Conexión
-        </button>
+        <button onclick="clearConsoleLog()" class="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors">Limpiar Log</button>
+        <button onclick="fetchDashboardData()" class="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded transition-colors">Reintentar Conexión</button>
       </div>
     </div>
   </div>
 
-  <!-- Carga del archivo JavaScript controlador principal -->
-  <script src="app.js"></script>
+  <!-- RUTA CORREGIDA HACIA ASSETS/JS/APP.JS -->
+  <script src="assets/js/app.js"></script>
 </body>
 </html>
